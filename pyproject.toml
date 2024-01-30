@@ -1,6 +1,6 @@
 [project]
 name = "diceutils"
-version = "0.1.2"
+version = "0.1.3"
 description = "骰娘相关插件"
 authors = [
     {name = "苏向夜", email = "fu050409@163.com"},
