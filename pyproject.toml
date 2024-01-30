@@ -1,0 +1,22 @@
+[project]
+name = "diceutils"
+version = "0.1.2"
+description = "骰娘相关插件"
+authors = [
+    {name = "苏向夜", email = "fu050409@163.com"},
+]
+dependencies = [
+    "infini>=2.0.1",
+    "pyyaml>=6.0.1",
+]
+requires-python = ">=3.10"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+
+[tool.pdm]
+distribution = true
