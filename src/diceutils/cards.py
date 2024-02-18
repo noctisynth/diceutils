@@ -1,10 +1,10 @@
+import yaml
+
 from infini.input import Input
 from yaml.loader import FullLoader
 from typing import Dict, Any
 from pathlib import Path
 from .utils import get_user_id, get_group_id
-
-import yaml
 
 cards = {}
 
