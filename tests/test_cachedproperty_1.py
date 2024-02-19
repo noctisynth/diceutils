@@ -13,6 +13,7 @@ class Circle:
         time.sleep(1)
         return 3.14 * self.radius**2
 
+    @property
     def area_no_cached(self):
         print("Calculating area...")
         time.sleep(1)
@@ -43,7 +44,7 @@ def test_cached_property(circle_instance):
 
 def test_uncached_property(circle_instance):
     start_time = time.time()
-    area1 = circle_instance.area_no_cached()
+    area1 = circle_instance.area_no_cached
     third_access_time = time.time() - start_time
 
     assert (

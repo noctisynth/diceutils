@@ -12,7 +12,6 @@ class MockInput:
 input_obj = Input("test_user_id")
 
 
-# 定义测试类
 class TestCards:
     # Test for initialization.
     def test_init(self):
