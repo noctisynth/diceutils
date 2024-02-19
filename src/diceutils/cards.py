@@ -29,13 +29,16 @@ Cards:
 
 import yaml
 import sqlite3
+
 # ----------------------------------------------------------------
 from pathlib import Path
 from functools import wraps
 from typing import Dict, Any, TypeVar
+
 # ----------------------------------------------------------------
 from infini.input import Input
 from yaml.loader import FullLoader
+
 # ----------------------------------------------------------------
 from .utils import get_user_id, get_group_id
 
@@ -64,6 +67,8 @@ def cached_method(func):
 
     @wraps(func)
     def wrapper(self, *args, **kwargs):
+        if not hasattr(self, "_method_cache"):
+            self._method_cache = {}
         cache_key = (func, args, frozenset(kwargs.items()))
         if cache_key not in self._method_cache:
             self._method_cache[cache_key] = func(self, *args, **kwargs)
@@ -145,6 +150,7 @@ class CardsManager(metaclass=CardsManagerMeta):
     def close(self):
         """Close the database connection."""
         self.conn.close()
+
 
 class Cards:
     """A class for handling card operations such as saving, loading, updating, and deleting."""
