@@ -32,7 +32,7 @@ import sqlite3
 
 from pathlib import Path
 from functools import wraps
-from typing import Dict, Any, List, Set, Union
+from typing import Dict, Any, List, Optional, Set, Union
 
 from diceutils.exceptions import TooManyCardsError
 
@@ -117,22 +117,31 @@ class CardsManager(metaclass=CardsManagerMeta):
         )
         self.conn.commit()
 
-    def save(self, user_id: str, cards: List[Dict[str, Any]]) -> None:
+    def save(self, cards: Dict[str, List[Dict[str, Any]]]) -> None:
         """Save user cards data.
 
         Args:
-            user_id (str): User ID.
-            cards (List[Dict[str, Any]]): Dictionary containing user cards data.
+            cards (Dict[str, List[Dict[str, Any]]]): Dictionary containing user cards data.
+                The keys represent the user IDs.
 
         Raises:
             TooManyCardsError: If the number of cards exceeds the maximum allowed limit.
         """
+        if not cards:  # 如果cards是空字典，则仅删除数据库内容
+            cursor = self.conn.cursor()
+            cursor.execute("DELETE FROM user_cards")
+            self.conn.commit()
+            return
+
         if len(cards) > self.max_cards_per_user and self.db_path == ":memory:":
             raise TooManyCardsError("Exceeded maximum allowed cards per user")
+
         cursor = self.conn.cursor()
-        cursor.execute("DELETE FROM user_cards WHERE user_id=?", (user_id,))
-        self.conn.commit()
-        cursor.execute("INSERT INTO user_cards VALUES (?, ?)", (user_id, str(cards)))
+        cursor.execute("DELETE FROM user_cards")
+        for user_id, card_data in cards.items():
+            cursor.execute(
+                "INSERT INTO user_cards VALUES (?, ?)", (user_id, str(card_data))
+            )
         self.conn.commit()
 
     def load(self, target: str = "*") -> Union[Dict[str, Any], List[Dict[str, Any]]]:
@@ -166,20 +175,21 @@ class Cards(dict):
 
     cards_manager = CardsManager()
 
-    def __init__(self, mode: str = "Unknown Mode"):
+    def __init__(self, mode: Union[str, None] = None):
         """Initialize Cards.
 
         Args:
-            mode (str, optional): Mode of the cards. Defaults to "Unknown Mode".
+            mode (str): Mode of the cards.
         """
+        if mode is None or not mode:
+            mode = "Unknown Mode"
         self.data: Dict[str, List[Dict[str, Any]]] = {}
         self.mode = mode
         self.load()
 
     def save(self):
         """Save the current card data."""
-        for user_id, user_data in self.data.items():
-            self.cards_manager.save(user_id, user_data)
+        self.cards_manager.save(self.data)
 
     def load(self, target: Union[Set[str], str] = "*"):
         """Load the card data."""
@@ -208,7 +218,14 @@ class Cards(dict):
         """
         if cha_dict is None:
             cha_dict = {}
-        self.data[user_id][index].update(cha_dict)
+        if user_id not in self.data:
+            self.data[user_id] = []
+        if len(self.data[user_id]) == 0:
+            self.data[user_id].append(cha_dict)
+        if index > len(self.data[user_id]) - 1:
+            self.data[user_id].append(cha_dict)
+        else:
+            self.data[user_id][index].update(cha_dict)
         self.save()
 
     def get(
@@ -223,8 +240,13 @@ class Cards(dict):
         Returns:
             Union[Dict[str, Any], List[Dict[str, Any]], None]: card data.
         """
-        data = self.data.get(user_id, None)
-        return data if index is None else data[index] if data is not None else None
+        if index is None:
+            return self.data.get(user_id)
+        return (
+            self.data.get(user_id, [])[index]
+            if index is not None and 0 <= index < len(self.data.get(user_id, []))
+            else None
+        )
 
     def delete(self, user_id: str, index: Union[int, None] = None) -> bool:
         """Delete Card Data.
@@ -236,13 +258,16 @@ class Cards(dict):
         Returns:
             bool: True if deletion is successful, False otherwise.
         """
-        if self.data.get(user_id, None) is not None:
+        if user_id in self.data:
             if index is None:
                 del self.data[user_id]
                 self.save()
+                print("3")
                 return True
-            if self.data[user_id].get(index, None) is not None:  # type: ignore[dict]
+            if 0 <= index < len(self.data[user_id]) and self.data[user_id][index] is not None:  # type: ignore[dict]
                 del self.data[user_id][index]
+                print("2")
                 self.save()
                 return True
+        print("1")
         return False
