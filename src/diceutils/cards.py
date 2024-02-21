@@ -32,18 +32,12 @@ import sqlite3
 
 from pathlib import Path
 from functools import wraps
-from typing import Dict, Any, Generic, List, Literal, Set, TypeVar, Union
-
-from infini.input import Input
-from yaml.loader import FullLoader
+from typing import Dict, Any, List, Set, Union
 
 from diceutils.exceptions import TooManyCardsError
 
-from .utils import get_user_id, get_group_id
-
-CARDS = {}
 MAX_CARDS_PER_USER = 5
-ROOT_PATH: Path = Path.home().joinpath(".dicergirl", "data")
+# ROOT_PATH: Path = Path.home().joinpath(".dicergirl", "data")
 
 
 class CachedProperty:
