@@ -133,7 +133,7 @@ class CardsManager(metaclass=CardsManagerMeta):
             self.conn.commit()
             return
 
-        if len(cards) > self.max_cards_per_user and self.db_path == ":memory:":
+        if len(cards) > self.max_cards_per_user:
             raise TooManyCardsError("Exceeded maximum allowed cards per user")
 
         cursor = self.conn.cursor()
