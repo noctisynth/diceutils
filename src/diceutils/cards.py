@@ -37,6 +37,8 @@ from typing import Dict, Any, List, Literal, Set, TypeVar, Union
 from infini.input import Input
 from yaml.loader import FullLoader
 
+from diceutils.exceptions import TooManyCardsError
+
 from .utils import get_user_id, get_group_id
 
 CARDS = {}
@@ -90,7 +92,11 @@ class CardsManagerMeta(type):
 class CardsManager(metaclass=CardsManagerMeta):
     """A class for managing user cards data using SQLite database."""
 
-    def __init__(self, db_path: str = ":memory:"):
+    def __init__(
+        self,
+        db_path: str = ":memory:",
+        max_cards_per_user: Union[int, str] = MAX_CARDS_PER_USER,
+    ):
         """
         Initialize CardsManager.
 
@@ -98,6 +104,7 @@ class CardsManager(metaclass=CardsManagerMeta):
             db_path (str): Path to the SQLite database file.
         """
         self.db_path = db_path
+        self.max_cards_per_user = int(max_cards_per_user)
         self.conn = sqlite3.connect(db_path)
         self._create_table()
         self._method_cache = {}
@@ -124,10 +131,10 @@ class CardsManager(metaclass=CardsManagerMeta):
             cards (Dict[str, Any]): Dictionary containing user cards data.
 
         Raises:
-            ValueError: If the number of cards exceeds the maximum allowed limit.
+            TooManyCardsError: If the number of cards exceeds the maximum allowed limit.
         """
-        if len(cards) > MAX_CARDS_PER_USER and self.db_path == ":memory:":
-            raise ValueError("Exceeded maximum allowed cards per user")
+        if len(cards) > self.max_cards_per_user and self.db_path == ":memory:":
+            raise TooManyCardsError("Exceeded maximum allowed cards per user")
         cursor = self.conn.cursor()
         cursor.execute("DELETE FROM user_cards WHERE user_id=?", (user_id,))
         self.conn.commit()
