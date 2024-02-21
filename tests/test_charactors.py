@@ -34,18 +34,24 @@ def test_charactor():
     assert coc_card.get("edu_expr") == ["本:集美大学", "硕: 密斯卡托尼克大学"]
 
     coc_card.set("job", ["医生", "间谍"])
-    # coc_card.set("职业", ["医生", "间谍"]) !报错，疑似未支持alias设置list
+    coc_card.set("职业", ["医生", "间谍"])
     assert coc_card.get("edu_expr") == coc_card.get("学历")
 
     coc_card.set("学历", '["本:集美大学", "硕: 密斯卡托尼克大学"]')
-    # assert coc_card.get("学历") == ["本:集美大学", "硕: 密斯卡托尼克大学"] !报错，通过alias设置的数据疑似未被转换
+    assert coc_card.get("学历") == ["本:集美大学", "硕: 密斯卡托尼克大学"]
 
     coc_card.set("test", "+4.0")
-    # assert coc_card.get("test") == 5 !报错，未知情况
+    assert coc_card.get("test") == 5
 
-    # print(coc_card.get_by_group_name("个人信息"))
     assert coc_card.get_by_group_name("技能") == {"侦查": 50}
+    assert coc_card.get_by_group_name("个人信息") == {
+        "sex": "男",
+        "age": 22,
+        "edu_expr": ["本:集美大学", "硕: 密斯卡托尼克大学"],
+        "job": ["医生", "间谍"],
+    }
 
     coc_card.set("b", "+4.0")
     coc_card.set("b", "+3")
-    # assert coc_card.get("b") == 7 !报错，未知情况
+    coc_card.set("b", "-1")
+    assert coc_card.get("b") == 7
