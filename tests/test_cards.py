@@ -4,7 +4,7 @@ from diceutils.cards import Cards, cached_method, CardsManager
 pp = pprint.PrettyPrinter(depth=2)
 
 coc_card = Cards("coc")
-coc_card.cards_manager = CardsManager(":memory:", max_cards_per_user="2")
+# coc_card.cards_manager = CardsManager(":memory:", max_cards_per_user=5)
 coc_card.data = {
     "阿水": [
         {"name": "Bob", "age": 20},
@@ -22,5 +22,6 @@ coc_card.data = {
     ],
 }
 coc_card.save()
+coc_card.data['阿水']
 
 pp.pprint(coc_card.data)

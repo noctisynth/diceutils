@@ -32,7 +32,7 @@ import sqlite3
 
 from pathlib import Path
 from functools import wraps
-from typing import Dict, Any, List, Literal, Set, TypeVar, Union
+from typing import Dict, Any, Generic, List, Literal, Set, TypeVar, Union
 
 from infini.input import Input
 from yaml.loader import FullLoader
@@ -42,8 +42,33 @@ from diceutils.exceptions import TooManyCardsError
 from .utils import get_user_id, get_group_id
 
 CARDS = {}
-ROOT_PATH: Path = Path.home().joinpath(".dicergirl", "data")
 MAX_CARDS_PER_USER = 5
+ROOT_PATH: Path = Path.home().joinpath(".dicergirl", "data")
+
+T = TypeVar("T")
+
+class MarkedListType(List[T], Generic[T]):
+    def __init__(self, items: List[T]):
+        if all(isinstance(item, MarkedList) for item in items):
+            super().__init__(items)
+        else:
+            raise TypeError("All elements must be of type MarkedList")
+
+
+class MarkedList(list):
+    def __init__(self, items: List[T]):
+        super().__init__(items)
+        self._items = list(items)
+        self._marked_index = 0
+
+    def mark_element(self, index=0):
+        if 0 <= index < len(self._items):
+            self._marked_index = index
+        else:
+            raise IndexError("Index out of range")
+
+    def get_marked_element(self):
+        return self._items[self._marked_index]
 
 
 class CachedProperty:
@@ -122,7 +147,7 @@ class CardsManager(metaclass=CardsManagerMeta):
         )
         self.conn.commit()
 
-    def save(self, user_id: str, cards: List[Dict[str, Any]]) -> None:
+    def save(self, user_id: str, cards: MarkedListType[Dict[str, Any]]) -> None:
         """
         Save user cards data.
 
@@ -138,7 +163,10 @@ class CardsManager(metaclass=CardsManagerMeta):
         cursor = self.conn.cursor()
         cursor.execute("DELETE FROM user_cards WHERE user_id=?", (user_id,))
         self.conn.commit()
-        cursor.execute("INSERT INTO user_cards VALUES (?, ?)", (user_id, str(cards)))
+        marked_list = MarkedList(cards)
+        cursor.execute(
+            "INSERT INTO user_cards VALUES (?, ?)", (user_id, str(marked_list))
+        )
         self.conn.commit()
 
     def load(self, target: str = "*") -> Dict[str, Any]:
@@ -180,14 +208,15 @@ class Cards(dict):
         Parameters:
             mode (str, optional): Mode of the cards. Defaults to "Unknown Mode".
         """
-        self.data: Dict[str, List[Dict[str, Any]]] = {}
+        self.data: Dict[str, MarkedListType[Dict[str, Any]]] = {}
         self.mode = mode
         self.load()
 
     def save(self):
         """Save the current card data."""
         for user_id, user_data in self.data.items():
-            self.cards_manager.save(user_id, user_data)
+            _user_data = MarkedList(user_data)
+            self.cards_manager.save(user_id, _user_data)
 
     def load(self, tartget: Union[Set[str], str] = "*"):
         """Load the card data."""
