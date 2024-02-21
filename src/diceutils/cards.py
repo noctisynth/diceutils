@@ -106,6 +106,7 @@ class CardsManager(metaclass=CardsManagerMeta):
         self.db_path = db_path
         self.max_cards_per_user = int(max_cards_per_user)
         self.conn = sqlite3.connect(db_path)
+
         self._create_table()
         self._method_cache = {}
 
@@ -123,12 +124,11 @@ class CardsManager(metaclass=CardsManagerMeta):
         self.conn.commit()
 
     def save(self, user_id: str, cards: List[Dict[str, Any]]) -> None:
-        """
-        Save user cards data.
+        """Save user cards data.
 
         Args:
             user_id (str): User ID.
-            cards (Dict[str, Any]): Dictionary containing user cards data.
+            cards (List[Dict[str, Any]]): Dictionary containing user cards data.
 
         Raises:
             TooManyCardsError: If the number of cards exceeds the maximum allowed limit.
@@ -142,14 +142,13 @@ class CardsManager(metaclass=CardsManagerMeta):
         self.conn.commit()
 
     def load(self, target: str = "*") -> Union[Dict[str, Any], List[Dict[str, Any]]]:
-        """
-        Load user cards data.
+        """Load user cards data.
 
         Parameters:
-            user_id (str): User ID or 'all' to load all data.
+            target (str): User ID or '*' to load all data.
 
         Returns:
-            Dict[str, Any]: Dictionary containing user cards data.
+            Union[Dict[str, Any], List[Dict[str, Any]]]: Dictionary containing user cards data.
         """
         cursor = self.conn.cursor()
         if target.lower() == "*":
@@ -174,10 +173,9 @@ class Cards(dict):
     cards_manager = CardsManager()
 
     def __init__(self, mode: str = "Unknown Mode"):
-        """
-        Initialize Cards.
+        """Initialize Cards.
 
-        Parameters:
+        Args:
             mode (str, optional): Mode of the cards. Defaults to "Unknown Mode".
         """
         self.data: Dict[str, List[Dict[str, Any]]] = {}
@@ -212,7 +210,7 @@ class Cards(dict):
         Args:
             user_id (str): target user id.
             index (int): card index.
-            cha_dict (Dict[str, Any]): card content.
+            cha_dict (Union[Dict[str, Any], None]): card content, default is ``None``.
         """
         if cha_dict is None:
             cha_dict = {}
@@ -226,7 +224,7 @@ class Cards(dict):
 
         Args:
             user_id (str): user id.
-            index (int): index to select.
+            index (Union[int, None]): index to select.
 
         Returns:
             Union[Dict[str, Any], List[Dict[str, Any]], None]: card data.
@@ -235,12 +233,11 @@ class Cards(dict):
         return data if index is None else data[index] if data is not None else None
 
     def delete(self, user_id: str, index: Union[int, None] = None) -> bool:
-        """
-        Delete card data.
+        """Delete Card Data.
 
-        Parameters:
-            input (Input): Input object.
-            qid (str, optional): Query ID. Defaults to "".
+        Args:
+            user_id (str): user id.
+            index (Union[int, None], optional): index of card data. Defaults to ``None``.
 
         Returns:
             bool: True if deletion is successful, False otherwise.
