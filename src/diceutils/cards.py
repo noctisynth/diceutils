@@ -94,14 +94,14 @@ class CardsManager(metaclass=CardsManagerMeta):
 
     def __init__(
         self,
-        db_path: str = ":memory:",
+        db_path: Union[str, Path] = ":memory:",
         max_cards_per_user: Union[int, str] = MAX_CARDS_PER_USER,
     ):
-        """
-        Initialize CardsManager.
+        """Initialize CardsManager.
 
-        Parameters:
-            db_path (str): Path to the SQLite database file.
+        Args:
+            db_path (Union[str, Path], optional): Path to the SQLite database file.. Defaults to ":memory:".
+            max_cards_per_user (Union[int, str], optional): Defaults to MAX_CARDS_PER_USER.
         """
         self.db_path = db_path
         self.max_cards_per_user = int(max_cards_per_user)
@@ -126,7 +126,7 @@ class CardsManager(metaclass=CardsManagerMeta):
         """
         Save user cards data.
 
-        Parameters:
+        Args:
             user_id (str): User ID.
             cards (Dict[str, Any]): Dictionary containing user cards data.
 
@@ -141,7 +141,7 @@ class CardsManager(metaclass=CardsManagerMeta):
         cursor.execute("INSERT INTO user_cards VALUES (?, ?)", (user_id, str(cards)))
         self.conn.commit()
 
-    def load(self, target: str = "*") -> Dict[str, Any]:
+    def load(self, target: str = "*") -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """
         Load user cards data.
 
@@ -161,7 +161,7 @@ class CardsManager(metaclass=CardsManagerMeta):
             cursor.execute(
                 "SELECT card_data FROM user_cards WHERE user_id=?", (user_id,)
             )
-            return eval(result[0]) if (result := cursor.fetchone()) else {}
+            return eval(result[0]) if (result := cursor.fetchone()) else []
 
     def close(self):
         """Close the database connection."""
@@ -189,47 +189,52 @@ class Cards(dict):
         for user_id, user_data in self.data.items():
             self.cards_manager.save(user_id, user_data)
 
-    def load(self, tartget: Union[Set[str], str] = "*"):
+    def load(self, target: Union[Set[str], str] = "*"):
         """Load the card data."""
-        if isinstance(tartget, str):
-            if tartget == "*":
-                self.data |= self.cards_manager.load()
+        if isinstance(target, str):
+            if target == "*":
+                self.data = self.cards_manager.load()  # type: ignore[dict]
             else:
-                self.data[tartget].update(self.cards_manager.load(tartget))
-        elif isinstance(tartget, set):
-            for user_id in tartget:
-                self.data[user_id].update(self.cards_manager.load(user_id))
+                user_data = self.cards_manager.load(target)
+                if len(user_data) > 0:
+                    self.data[tartget] = user_data  # type: ignore[list]
+        elif isinstance(target, set):
+            for user_id in target:
+                user_data = self.cards_manager.load(user_id)
+                if len(user_data) > 0:
+                    self.data[user_id] = user_data  # type: ignore[list]
 
-    def update(self, cha_dict: Dict[str, Dict[str, Any]] | None) -> None:
-        """
-        Update card data.
+    def update(
+        self, user_id: str, index: int = 0, cha_dict: Union[Dict[str, Any], None] = None
+    ) -> None:
+        """Update Card Data.
 
-        Parameters:
-            input (Input): Input object.
-            cha_dict (Dict[str, Any]): Dictionary containing updated card data.
-            qid (str, optional): Query ID. Defaults to "".
+        Args:
+            user_id (str): target user id.
+            index (int): card index.
+            cha_dict (Dict[str, Any]): card content.
         """
-        if not cha_dict:
-            self.data.update()
-        else:
-            self.data.update(cha_dict)
+        if cha_dict is None:
+            cha_dict = {}
+        self.data[user_id][index].update(cha_dict)
         self.save()
 
-    def get(self, input: Input, qid="") -> Dict[str, Any]:
-        """
-        Retrieve card data.
+    def get(
+        self, user_id: str, index: Union[int, None] = None
+    ) -> Union[Dict[str, Any], List[Dict[str, Any]], None]:
+        """Get Card Data.
 
-        Parameters:
-            input (Input): Input object.
-            qid (str, optional): Query ID. Defaults to "".
+        Args:
+            user_id (str): user id.
+            index (int): index to select.
 
         Returns:
-            Dict[str, Any]: Dictionary containing card data.
+            Union[Dict[str, Any], List[Dict[str, Any]], None]: card data.
         """
-        user_id = "some_user_id"  # Actual user ID retrieval logic needed
-        return self.data.get(qid or get_user_id(input), {})
+        data = self.data.get(user_id, None)
+        return data if index is None else data[index] if data is not None else None
 
-    def delete(self, input: Input, qid: str = "") -> bool:
+    def delete(self, user_id: str, index: Union[int, None] = None) -> bool:
         """
         Delete card data.
 
@@ -240,15 +245,13 @@ class Cards(dict):
         Returns:
             bool: True if deletion is successful, False otherwise.
         """
-        user_id = "some_user_id"  # Actual user ID retrieval logic needed
-        if qid:
-            return self._extracted_from_delete_14(qid, input)
-        elif not qid and get_user_id(input) in self.data:
-            return self._extracted_from_delete_14(qid, input)
+        if self.data.get(user_id, None) is not None:
+            if index is None:
+                del self.data[user_id]
+                self.save()
+                return True
+            if self.data[user_id].get(index, None) is not None:  # type: ignore[dict]
+                del self.data[user_id][index]
+                self.save()
+                return True
         return False
-
-    # TODO Rename this here and in `delete`
-    def _extracted_from_delete_14(self, qid, input):
-        del self.data[qid or get_user_id(input)]
-        self.save()
-        return True

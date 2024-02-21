@@ -1,10 +1,13 @@
 import pprint
+from os.path import join, abspath, dirname
+from pathlib import Path
 from diceutils.cards import Cards, cached_method, CardsManager
 
-pp = pprint.PrettyPrinter(depth=2)
+pp = pprint.PrettyPrinter(depth=3)
+
 
 coc_card = Cards("coc")
-# coc_card.cards_manager = CardsManager(":memory:", max_cards_per_user=5)
+coc_card.cards_manager = CardsManager(join("coc.db"), max_cards_per_user=5)
 coc_card.data = {
     "阿水": [
         {"name": "Bob", "age": 20},
@@ -22,6 +25,20 @@ coc_card.data = {
     ],
 }
 coc_card.save()
-coc_card.data['阿水']
-
+coc_card.load()
+coc_card.save()
+coc_card.update('小苏',0,{'name': 'Jack', 'age':19})
 pp.pprint(coc_card.data)
+
+
+
+
+
+
+
+
+
+
+
+
+
