@@ -2,11 +2,11 @@
 # It is not intended for manual editing.
 
 [metadata]
-groups = ["default"]
+groups = ["default", "dev"]
 cross_platform = true
 static_urls = false
 lock_version = "4.3"
-content_hash = "sha256:2180a7d14fd2685ced164dc22933bd890f5d445e76e466338208c3e036bf3539"
+content_hash = "sha256:f0cede63ff5dbfc432383f23aef143b79d44fb58be7469a7574d1307faad92fa"
 
 [[package]]
 name = "colorama"

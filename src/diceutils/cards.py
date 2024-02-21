@@ -45,7 +45,7 @@ CARDS = {}
 MAX_CARDS_PER_USER = 5
 ROOT_PATH: Path = Path.home().joinpath(".dicergirl", "data")
 
-T = TypeVar("T")
+T = TypeVar("T", bound="MarkedList")
 
 class MarkedListType(List[T], Generic[T]):
     def __init__(self, items: List[T]):

@@ -8,7 +8,6 @@ authors = [
 dependencies = [
     "infini>=2.0.1",
     "pyyaml>=6.0.1",
-    "pytest>=8.0.1",
 ]
 requires-python = ">=3.10"
 readme = "README.md"
@@ -21,3 +20,8 @@ build-backend = "pdm.backend"
 
 [tool.pdm]
 distribution = true
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "pytest>=8.0.1",
+]
