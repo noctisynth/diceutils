@@ -228,7 +228,9 @@ class Dicer:
         self.roll_string = roll_string if roll_string else self.roll_string
         self.calc_list = []
         self.db = EMPTY_STRING
-        matches: List[str] = re.findall(r"\d*[a-zA-Z]\w*|\d+|[-+*/]", self.roll_string)
+        matches: List[str] = re.findall(
+            r"\d*[a-zA-Z]\w*|\d+|[-+*/()]", self.roll_string
+        )
 
         for match in matches:
             if match in ("+", "-", "*", "/", "(", ")"):
@@ -254,6 +256,19 @@ class Dicer:
             self.db = "1D100"
 
         return self
+
+    @staticmethod
+    def check(roll_string: str):
+        matches: List[str] = re.findall(r"\d*[a-zA-Z]\w*|\d+|[-+*/()]", roll_string)
+        patterns = [r"\d*[dD]\d*", r"\d*[bB]\d+", r"\d*[pP]\d+", r"\d+"]
+
+        for match in matches:
+            if match not in "-+*/()" and not all(
+                [re.match(pattern, match) for pattern in patterns]
+            ):
+                return False
+
+        return True
 
     def roll(self):
         self.parse(roll_string=self.roll_string, explode=self.explode)
@@ -325,6 +340,7 @@ if __name__ == "__main__":
         "1": 1,
         "10": 10,
         "100": 100,
+        "100-(10-10)": 100,
         "-1": -1,
         "-10": -10,
         "-100": -100,
