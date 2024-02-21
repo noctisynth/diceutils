@@ -27,19 +27,16 @@ Cards:
         - delete(input: Input, qid: str = "") -> bool: Deletes card data.
 """
 
-import yaml
+import pickle
 import sqlite3
 
-# ----------------------------------------------------------------
 from pathlib import Path
 from functools import wraps
-from typing import Dict, Any, TypeVar
+from typing import Dict, Any, List, Literal, Set, TypeVar, Union
 
-# ----------------------------------------------------------------
 from infini.input import Input
 from yaml.loader import FullLoader
 
-# ----------------------------------------------------------------
 from .utils import get_user_id, get_group_id
 
 CARDS = {}
@@ -69,7 +66,10 @@ def cached_method(func):
     def wrapper(self, *args, **kwargs):
         if not hasattr(self, "_method_cache"):
             self._method_cache = {}
-        cache_key = (func, args, frozenset(kwargs.items()))
+        # Convert args and kwargs to hashable objects
+        args_key = pickle.dumps(args)
+        kwargs_key = pickle.dumps(kwargs)
+        cache_key = (func, args_key, kwargs_key)
         if cache_key not in self._method_cache:
             self._method_cache[cache_key] = func(self, *args, **kwargs)
         return self._method_cache[cache_key]
@@ -97,6 +97,7 @@ class CardsManager(metaclass=CardsManagerMeta):
         Parameters:
             db_path (str): Path to the SQLite database file.
         """
+        self.db_path = db_path
         self.conn = sqlite3.connect(db_path)
         self._create_table()
         self._method_cache = {}
@@ -114,7 +115,7 @@ class CardsManager(metaclass=CardsManagerMeta):
         )
         self.conn.commit()
 
-    def save(self, user_id: str, cards: Dict[str, Any]) -> None:
+    def save(self, user_id: str, cards: List[Dict[str, Any]]) -> None:
         """
         Save user cards data.
 
@@ -125,7 +126,7 @@ class CardsManager(metaclass=CardsManagerMeta):
         Raises:
             ValueError: If the number of cards exceeds the maximum allowed limit.
         """
-        if len(cards) > MAX_CARDS_PER_USER:
+        if len(cards) > MAX_CARDS_PER_USER and self.db_path == ":memory:":
             raise ValueError("Exceeded maximum allowed cards per user")
         cursor = self.conn.cursor()
         cursor.execute("DELETE FROM user_cards WHERE user_id=?", (user_id,))
@@ -133,26 +134,34 @@ class CardsManager(metaclass=CardsManagerMeta):
         cursor.execute("INSERT INTO user_cards VALUES (?, ?)", (user_id, str(cards)))
         self.conn.commit()
 
-    def load(self, user_id: str) -> Dict[str, Any]:
+    def load(self, target: str = "*") -> Dict[str, Any]:
         """
         Load user cards data.
 
         Parameters:
-            user_id (str): User ID.
+            user_id (str): User ID or 'all' to load all data.
 
         Returns:
             Dict[str, Any]: Dictionary containing user cards data.
         """
         cursor = self.conn.cursor()
-        cursor.execute("SELECT card_data FROM user_cards WHERE user_id=?", (user_id,))
-        return eval(result[0]) if (result := cursor.fetchone()) else {}
+        if target.lower() == "*":
+            cursor.execute("SELECT user_id, card_data FROM user_cards")
+            result = cursor.fetchall()
+            return {user_id: eval(card_data) for user_id, card_data in result}
+        else:
+            user_id = target
+            cursor.execute(
+                "SELECT card_data FROM user_cards WHERE user_id=?", (user_id,)
+            )
+            return eval(result[0]) if (result := cursor.fetchone()) else {}
 
     def close(self):
         """Close the database connection."""
         self.conn.close()
 
 
-class Cards:
+class Cards(dict):
     """A class for handling card operations such as saving, loading, updating, and deleting."""
 
     cards_manager = CardsManager()
@@ -164,21 +173,27 @@ class Cards:
         Parameters:
             mode (str, optional): Mode of the cards. Defaults to "Unknown Mode".
         """
-        self.data: Dict[str, Dict[str, Any]] = {}
+        self.data: Dict[str, List[Dict[str, Any]]] = {}
         self.mode = mode
         self.load()
 
     def save(self):
         """Save the current card data."""
-        user_id = "some_user_id"  # Actual user ID retrieval logic needed
-        self.cards_manager.save(user_id, self.data)
+        for user_id, user_data in self.data.items():
+            self.cards_manager.save(user_id, user_data)
 
-    def load(self):
+    def load(self, tartget: Union[Set[str], str] = "*"):
         """Load the card data."""
-        user_id = "some_user_id"  # Actual user ID retrieval logic needed
-        self.data = self.cards_manager.load(user_id)
+        if isinstance(tartget, str):
+            if tartget == "*":
+                self.data |= self.cards_manager.load()
+            else:
+                self.data[tartget].update(self.cards_manager.load(tartget))
+        elif isinstance(tartget, set):
+            for user_id in tartget:
+                self.data[user_id].update(self.cards_manager.load(user_id))
 
-    def update(self, input: Input, cha_dict: Dict[str, Any], qid: str = "") -> None:
+    def update(self, cha_dict: Dict[str, Dict[str, Any]] | None) -> None:
         """
         Update card data.
 
@@ -187,8 +202,10 @@ class Cards:
             cha_dict (Dict[str, Any]): Dictionary containing updated card data.
             qid (str, optional): Query ID. Defaults to "".
         """
-        user_id = "some_user_id"  # Actual user ID retrieval logic needed
-        self.data.update({qid or get_user_id(input): cha_dict})
+        if not cha_dict:
+            self.data.update()
+        else:
+            self.data.update(cha_dict)
         self.save()
 
     def get(self, input: Input, qid="") -> Dict[str, Any]:
