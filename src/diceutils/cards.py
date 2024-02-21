@@ -45,6 +45,22 @@ CARDS = {}
 MAX_CARDS_PER_USER = 5
 ROOT_PATH: Path = Path.home().joinpath(".dicergirl", "data")
 
+
+class CachedProperty:
+    """A decorator for caching property values."""
+
+    def __init__(self, func):
+        self.func = func
+        self.cache = {}
+
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        if instance not in self.cache:
+            self.cache[instance] = self.func(instance)
+        return self.cache[instance]
+
+
 def cached_method(func):
     """A decorator for caching method results."""
 
@@ -122,9 +138,7 @@ class CardsManager(metaclass=CardsManagerMeta):
         cursor = self.conn.cursor()
         cursor.execute("DELETE FROM user_cards WHERE user_id=?", (user_id,))
         self.conn.commit()
-        cursor.execute(
-            "INSERT INTO user_cards VALUES (?, ?)", (user_id, str(cards))
-        )
+        cursor.execute("INSERT INTO user_cards VALUES (?, ?)", (user_id, str(cards)))
         self.conn.commit()
 
     def load(self, target: str = "*") -> Dict[str, Any]:
