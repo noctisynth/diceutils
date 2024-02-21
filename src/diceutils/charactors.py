@@ -171,8 +171,7 @@ class TemplateManager:
         return cls._instance
 
     def add_template(self, name: str, template: List[AttributeGroup]):
-        self.__templates[name] = Template(name, template)
-        print(self.__templates)
+        self.__templates[name.lower()] = Template(name, template)
 
     def get_template(self, name: str):
         if name not in self.__templates:
