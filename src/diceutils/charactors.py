@@ -97,7 +97,7 @@ class Character:
 
     def set(self, name: str, value: Any):
         main_name = self.template.get_main_name(name) or name
-        attr_type = self.template.get_attr_type(name)
+        attr_type = self.template.get_attr_type(main_name)
         if attr_type and isinstance(value, attr_type):
             self.__attributes[main_name] = value
             return
@@ -115,7 +115,7 @@ class Character:
         self.__attributes[main_name] = new_value
 
     def get(self, name: str):
-        main_name = self.template.get_main_name(name)
+        main_name = self.template.get_main_name(name) or name
         if main_name in self.__attributes:
             return self.__attributes[main_name]
 
