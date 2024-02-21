@@ -54,4 +54,4 @@ def test_charactor():
     coc_card.set("b", "+4.0")
     coc_card.set("b", "+3")
     coc_card.set("b", "-1")
-    assert coc_card.get("b") == 7
+    assert coc_card.get("b") == 6
