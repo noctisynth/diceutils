@@ -76,7 +76,7 @@ def test_Cards_update(mock_cards_manager, user_id, index, cha_dict, expected_dat
 
     # Assert
     assert cards.data == expected_data
-    mock_cards_manager.save.assert_called_once_with(user_id, [expected_data[user_id][0]])
+    mock_cards_manager.save.assert_called_once_with({user_id: [expected_data[user_id][0]]})
 
 # Parametrized test for get method
 @pytest.mark.parametrize("user_id, index, expected_result", [
