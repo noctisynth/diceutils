@@ -262,12 +262,10 @@ class Cards(dict):
             if index is None:
                 del self.data[user_id]
                 self.save()
-                print("3")
                 return True
             if 0 <= index < len(self.data[user_id]) and self.data[user_id][index] is not None:  # type: ignore[dict]
                 del self.data[user_id][index]
-                print("2")
                 self.save()
                 return True
-        print("1")
+
         return False
