@@ -175,7 +175,7 @@ class Cards(dict):
 
     cards_manager = CardsManager()
 
-    def __init__(self, mode: Union[str, None] = None):
+    def __init__(self, mode: Optional[str] = None):
         """Initialize Cards.
 
         Args:
@@ -229,13 +229,13 @@ class Cards(dict):
         self.save()
 
     def get(
-        self, user_id: str, index: Union[int, None] = None
+        self, user_id: str, index: Optional[int] = None
     ) -> Union[Dict[str, Any], List[Dict[str, Any]], None]:
         """Get Card Data.
 
         Args:
             user_id (str): user id.
-            index (Union[int, None]): index to select.
+            index (Optional[int]): index to select.
 
         Returns:
             Union[Dict[str, Any], List[Dict[str, Any]], None]: card data.
@@ -248,12 +248,12 @@ class Cards(dict):
             else None
         )
 
-    def delete(self, user_id: str, index: Union[int, None] = None) -> bool:
+    def delete(self, user_id: str, index: Optional[int] = None) -> bool:
         """Delete Card Data.
 
         Args:
             user_id (str): user id.
-            index (Union[int, None], optional): index of card data. Defaults to ``None``.
+            index (Optional[int], optional): index of card data. Defaults to ``None``.
 
         Returns:
             bool: True if deletion is successful, False otherwise.
