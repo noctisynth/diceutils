@@ -8,11 +8,16 @@ def test_charactor():
         "COC",
         [
             AttributeGroup(
-                "个人信息",
+                "meta",
                 [
                     Attribute("name", str, ["名字", "称谓"]),
-                    Attribute("sex", str, ["gender", "sex"]),
-                    Attribute("age", int, ["age"]),
+                    Attribute("sex", str, ["性别", "gender"]),
+                    Attribute("age", int, ["年龄"]),
+                ],
+            ),
+            AttributeGroup(
+                "basic",
+                [
                     Attribute("edu_expr", list, ["学历"]),
                     Attribute("job", list, ["职业"]),
                 ],
@@ -44,9 +49,7 @@ def test_charactor():
     assert coc_card.get("test") == 5
 
     assert coc_card.get_by_group_name("技能") == {"侦查": 50}
-    assert coc_card.get_by_group_name("个人信息") == {
-        "sex": "男",
-        "age": 22,
+    assert coc_card.get_by_group_name("basic") == {
         "edu_expr": ["本:集美大学", "硕: 密斯卡托尼克大学"],
         "job": ["医生", "间谍"],
     }
@@ -62,3 +65,5 @@ def test_charactor():
     assert coc_card.get("age") == 4
     coc_card.set("age", "-2d1")
     assert coc_card.get("age") == 2
+
+    assert coc_card.display_group("meta") == "性别: 男 年龄: 2"
