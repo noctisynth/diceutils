@@ -22,7 +22,7 @@ Cards:
     Methods:
         - save(): Saves the current card data.
         - load(): Loads the card data.
-        - update(input: Input, cha_dict: Dict[str, Any], qid: str = "") -> None: Updates card data.
+        - update(input: Input, attributes: Dict[str, Any], qid: str = "") -> None: Updates card data.
         - get(input: Input, qid: str = "") -> Dict[str, Any]: Retrieves card data.
         - delete(input: Input, qid: str = "") -> bool: Deletes card data.
 """
@@ -206,25 +206,28 @@ class Cards(dict):
                     self.data[user_id] = user_data  # type: ignore[list]
 
     def update(
-        self, user_id: str, index: int = 0, cha_dict: Union[Dict[str, Any], None] = None
+        self,
+        user_id: str,
+        index: int = 0,
+        attributes: Union[Dict[str, Any], None] = None,
     ) -> None:
         """Update Card Data.
 
         Args:
             user_id (str): target user id.
             index (int): card index.
-            cha_dict (Union[Dict[str, Any], None]): card content, default is ``None``.
+            attributes (Union[Dict[str, Any], None]): card content, default is ``None``.
         """
-        if cha_dict is None:
-            cha_dict = {}
+        if attributes is None:
+            attributes = {}
         if user_id not in self.data:
             self.data[user_id] = []
         if len(self.data[user_id]) == 0:
-            self.data[user_id].append(cha_dict)
+            self.data[user_id].append(attributes)
         if index > len(self.data[user_id]) - 1:
-            self.data[user_id].append(cha_dict)
+            self.data[user_id].append(attributes)
         else:
-            self.data[user_id][index].update(cha_dict)
+            self.data[user_id][index].update(attributes)
         self.save()
 
     def get(
