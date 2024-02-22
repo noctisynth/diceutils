@@ -127,18 +127,17 @@ class CardsManager(metaclass=CardsManagerMeta):
         Raises:
             TooManyCardsError: If the number of cards exceeds the maximum allowed limit.
         """
-        if not cards:  # 如果cards是空字典，则仅删除数据库内容
+        if not cards:
             cursor = self.conn.cursor()
             cursor.execute("DELETE FROM user_cards")
             self.conn.commit()
             return
 
-        if len(cards) > self.max_cards_per_user:
-            raise TooManyCardsError("Exceeded maximum allowed cards per user")
-
         cursor = self.conn.cursor()
         cursor.execute("DELETE FROM user_cards")
         for user_id, card_data in cards.items():
+            if len(card_data) > self.max_cards_per_user:
+                raise TooManyCardsError("Exceeded maximum allowed cards per user")
             cursor.execute(
                 "INSERT INTO user_cards VALUES (?, ?)", (user_id, str(card_data))
             )
