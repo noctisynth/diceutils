@@ -46,7 +46,7 @@ def format_str(message: str, begin=None, lower=True) -> str:
     regex = r"[<\[](.*?)[\]>]"
     message = str(message).lower() if lower else str(message)
     msg = translate_punctuation(
-        re.sub("\s+", " ", re.sub(regex, "", message)).strip(" ")
+        re.sub(r"\s+", " ", re.sub(regex, "", message)).strip(" ")
     )
     if msg.startswith("/"):
         msg = "." + msg[1:]
