@@ -36,7 +36,7 @@ from typing import Dict, Any, List, Optional, Set, Union
 
 from diceutils.exceptions import TooManyCardsError
 
-MAX_CARDS_PER_USER = 5
+MAX_CARDS_PER_USER = 9
 
 
 class CachedProperty:
@@ -228,6 +228,13 @@ class Cards:
     def _get_selected_id(self, user_id: str) -> int:
         return self.selected_cards.get(user_id) or 0
 
+    def new(self, user_id: str, attributes: Optional[Dict[str, Any]] = None) -> None:
+        """Set up a new card."""
+        length = len(self.data.get(user_id, []))
+        if length >= MAX_CARDS_PER_USER:
+            raise TooManyCardsError
+        self.update(user_id, length + 1, attributes=attributes)
+
     def update(
         self,
         user_id: str,
@@ -300,5 +307,12 @@ class Cards:
         return False
 
     def select(self, user_id: str, index: int = 0) -> None:
+        """Set a card index as default card."""
         self.selected_cards[user_id] = index
+        self.save()
+
+    def clear(self, user_id: str) -> None:
+        """Clear all cards of a user."""
+        self.selected_cards[user_id] = 0
+        self.data[user_id] = []
         self.save()
