@@ -40,6 +40,9 @@ class Template:
         self.__template = {
             attr.name: attr for group in template for attr in group.attributes
         }
+        self.__template_display = {
+            attr.name: attr.alias[0] for group in template for attr in group.attributes
+        }
         self.__alias_map = {
             alias: attr.name
             for attr in self.__template.values()
@@ -65,12 +68,15 @@ class Template:
             raise ValueError(f"'{name}' does not exist in the template.")
         return main_name
 
-    def get_main_name(self, name: str) -> str | None:
+    def get_main_name(self, name: str) -> Optional[str]:
         main_name = self.__alias_map.get(name)
         if self._is_exist(main_name):
             return main_name
         else:
             return None
+
+    def get_display_name(self, name: str) -> Optional[str]:
+        return self.__template_display.get(name)
 
     def is_valid_value(self, name: str, value):
         if not self._is_exist(name):
@@ -124,6 +130,13 @@ class Character:
             if name in self.__attributes:
                 result[name] = self.__attributes[name]
         return result
+
+    def display_group(self, name: str) -> str:
+        group = self.get_by_group_name(name)
+        results = []
+        for attr, data in group.items():
+            results.append(f"{self.template.get_display_name(attr)}: {data}")
+        return " ".join(results)
 
     def loads(self, attributes: Dict[str, Any]):
         for key, value in attributes.items():
