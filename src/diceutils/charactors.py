@@ -1,4 +1,5 @@
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
+from diceutils.dicer import Dicer
 
 import json
 import re
@@ -106,7 +107,7 @@ class Character:
             return
         new_value = self._convert_str(value, attr_type)
         if attr_type and not isinstance(new_value, attr_type):
-            return
+            raise ValueError
         if isinstance(new_value, (int, float)) and str(value).startswith(("+", "-")):
             if name in self.__attributes:
                 convert_type = type(self.__attributes[name])
@@ -138,7 +139,7 @@ class Character:
         return self.__attributes
 
     @staticmethod
-    def _convert_str(text: str, convert_type: type | None = None):
+    def _convert_str(text: str, convert_type: Optional[type] = None):
         def isdigit(s: str):
             return bool(re.match(r"^[+-]?\d+$", s))
 
@@ -150,9 +151,13 @@ class Character:
                 return int(text)
             elif isfloat(text):
                 return float(text)
+            elif Dicer.check(text):
+                return Dicer(text).roll().outcome
         else:
-            if convert_type in [list, dict]:
+            if convert_type in (list, dict):
                 return json.loads(text)
+            elif convert_type in (int, float) and Dicer.check(text):
+                return Dicer(text).roll().outcome
             else:
                 try:
                     return convert_type(text)

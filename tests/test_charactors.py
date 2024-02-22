@@ -55,3 +55,10 @@ def test_charactor():
     coc_card.set("b", "+3")
     coc_card.set("b", "-1")
     assert coc_card.get("b") == 6
+
+    coc_card.set("age", "2d1")
+    assert coc_card.get("age") == 2
+    coc_card.set("age", "+2d1")
+    assert coc_card.get("age") == 4
+    coc_card.set("age", "-2d1")
+    assert coc_card.get("age") == 2
