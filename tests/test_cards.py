@@ -6,7 +6,7 @@ from diceutils.cards import Cards
 @pytest.fixture
 def mock_cards_manager(monkeypatch):
     mock_manager = MagicMock()
-    monkeypatch.setattr("diceutils.cards.Cards.cards_manager", mock_manager)
+    monkeypatch.setattr("diceutils.cards.CardsManager", lambda *args, **kwargs: mock_manager)
     return mock_manager
 
 # Parametrized test for __init__ method

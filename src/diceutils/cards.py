@@ -187,19 +187,21 @@ class CardsManager(metaclass=CardsManagerMeta):
 class Cards:
     """A class for handling card operations such as saving, loading, updating, and deleting."""
 
-    cards_manager = CardsManager()
+    cards_manager: CardsManager
 
-    def __init__(self, mode: Optional[str] = None):
+    def __init__(self, mode: Optional[str] = None, store: bool = False):
         """Initialize Cards.
 
         Args:
             mode (str): Mode of the cards.
+            store (bool): Decide whether this class save to disk or memory. (Defaults to ``False``)
         """
         if mode is None or not mode:
             mode = "unknown_mode"
         self.data: Dict[str, List[Dict[str, Any]]] = {}
         self.selected_cards: Dict[str, int] = {}
         self.mode = mode
+        self.cards_manager = CardsManager(f"{mode}.db" if store else ":memory:")
         self.load()
 
     def save(self):
