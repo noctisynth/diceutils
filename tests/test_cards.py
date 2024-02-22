@@ -12,8 +12,8 @@ def mock_cards_manager(monkeypatch):
 # Parametrized test for __init__ method
 @pytest.mark.parametrize("mode, expected_mode", [
     ("Test Mode", "Test Mode"),  # ID: init-happy-path-1
-    ("", "Unknown Mode"),        # ID: init-edge-case-empty-string
-    (None, "Unknown Mode"),      # ID: init-edge-case-none
+    ("", "unknown_mode"),        # ID: init-edge-case-empty-string
+    (None, "unknown_mode"),      # ID: init-edge-case-none
 ], ids=["init-happy-path-1", "init-edge-case-empty-string", "init-edge-case-none"])
 def test_Cards_init(mock_cards_manager, mode, expected_mode):
     # Arrange

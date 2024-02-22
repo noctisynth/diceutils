@@ -196,7 +196,7 @@ class Cards:
             mode (str): Mode of the cards.
         """
         if mode is None or not mode:
-            mode = "Unknown Mode"
+            mode = "unknown_mode"
         self.data: Dict[str, List[Dict[str, Any]]] = {}
         self.selected_cards: Dict[str, int] = {}
         self.mode = mode
