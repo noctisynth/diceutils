@@ -1,30 +1,8 @@
 """
-Overview
-========
-
-This module provides a CardsManager class for managing user cards data using SQLite database. 
-It also includes a Cards class for handling card operations such as saving, loading, updating, and deleting.
-
-Classes
-=======
-
-CardsManager:
-    A class for managing user cards data using SQLite database.
-
-    Methods:
-        - save(user_id: str, cards: Dict[str, Any]) -> None: Saves user cards data.
-        - load(user_id: str) -> Dict[str, Any]: Loads user cards data.
-        - close(): Closes the database connection.
-
-Cards:
-    A class for handling card operations such as saving, loading, updating, and deleting.
-
-    Methods:
-        - save(): Saves the current card data.
-        - load(): Loads the card data.
-        - update(input: Input, cha_dict: Dict[str, Any], qid: str = "") -> None: Updates card data.
-        - get(input: Input, qid: str = "") -> Dict[str, Any]: Retrieves card data.
-        - delete(input: Input, qid: str = "") -> bool: Deletes card data.
+@author         :     HsiangNianian
+@date           :     2024年2月23日
+@description    :     This Module Provides Access to the Database and 
+                      Database Connection Functions for Cards Management. 
 """
 
 import pickle
