@@ -1,6 +1,6 @@
 """
-@author         :     HsiangNianian
-@date           :     2024年2月23日
+@author         :     HsiangNianian<i@jyunko.cn>
+@date           :     Feb. 23, 2024.
 @description    :     This Module Provides Access to the Database and 
                       Database Connection Functions for Cards Management. 
 """
