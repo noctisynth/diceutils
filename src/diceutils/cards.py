@@ -73,6 +73,28 @@ def cached_method(func):
     return wrapper
 
 
+class CardsPool(object):
+    _cards_pool = {}
+
+    @CachedProperty
+    def cards_pool(self):
+        return self._cards_pool
+
+    def __str__(self) -> str:
+        return self.__repr__()
+
+    def __repr__(self) -> str:
+        return self._cards_pool.__repr__()
+
+    @staticmethod
+    def register(card_name: str):
+        CardsPool._cards_pool[card_name] = Cards(mode=card_name)
+
+    @staticmethod
+    def get(card_name: str):
+        return CardsPool._cards_pool[card_name]
+
+
 class CardsManagerMeta(type):
     """Metaclass for caching methods in CardsManager class."""
 
