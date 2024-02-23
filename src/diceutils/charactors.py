@@ -1,11 +1,12 @@
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
+from diceutils.dicer import Dicer
 
 import json
 import re
 
 
 class Attribute:
-    def __init__(self, name, _type, alias=None):
+    def __init__(self, name: str, _type: type, alias: Optional[List[str]] = None):
         self.name = name
         self.type = _type
         self.alias = alias or []
@@ -13,23 +14,23 @@ class Attribute:
 
     def __repr__(self):
         return (
-            f"AttributeDefinition(name={self.name!r}, type={self.type.__name__!r}, "
+            f"Attribute(name={self.name!r}, type={self.type.__name__!r}, "
             f"alias={self.alias!r})"
         )
 
 
 class AttributeGroup:
-    def __init__(self, name, attributes):
+    def __init__(self, name: str, attributes: List[Attribute]):
         self.group_name = name
-        self.definitions: List[Attribute] = attributes
+        self.attributes: List[Attribute] = attributes
 
     def __repr__(self):
-        return f"AttributeDefinitionGroup(name={self.group_name!r}, definitions={self.definitions})"
+        return f"AttributeGroup(name={self.group_name!r}, attributes={self.attributes})"
 
 
 class Template:
-    def __init__(self, template_name, template: List[AttributeGroup]):
-        self.template_name = template_name
+    def __init__(self, name: str, template: List[AttributeGroup]):
+        self.name = name
         self.__raw_template = {group.group_name: group for group in template}
         # self.__attr_name_to_group_name = {
         #     definition.name: group.group_name
@@ -37,7 +38,10 @@ class Template:
         #     for definition in group.definitions
         # }
         self.__template = {
-            attr.name: attr for group in template for attr in group.definitions
+            attr.name: attr for group in template for attr in group.attributes
+        }
+        self.__template_display = {
+            attr.name: attr.alias[0] for group in template for attr in group.attributes
         }
         self.__alias_map = {
             alias: attr.name
@@ -46,19 +50,17 @@ class Template:
         }
 
     def __repr__(self):
-        return (
-            f"Template(name={self.template_name!r}, template={self.__raw_template!r})"
-        )
+        return f"Template(name={self.name!r}, template={self.__raw_template!r})"
 
     def get_attr_type(self, name: str):
         if name not in self.__template:
             return None
         return self.__template[name].type
 
-    def get_attr_names_by_group(self, name):
+    def get_attr_names_by_group(self, name: str):
         if name not in self.__raw_template:
             raise KeyError(f"Group '{name}' is not defined.")
-        return [definition.name for definition in self.__raw_template[name].definitions]
+        return [attribute.name for attribute in self.__raw_template[name].attributes]
 
     def get_main_name_or_raise(self, name: str) -> str:
         main_name = self.get_main_name(name)
@@ -66,12 +68,15 @@ class Template:
             raise ValueError(f"'{name}' does not exist in the template.")
         return main_name
 
-    def get_main_name(self, name: str) -> str | None:
+    def get_main_name(self, name: str) -> Optional[str]:
         main_name = self.__alias_map.get(name)
         if self._is_exist(main_name):
             return main_name
         else:
             return None
+
+    def get_display_name(self, name: str) -> Optional[str]:
+        return self.__template_display.get(name)
 
     def is_valid_value(self, name: str, value):
         if not self._is_exist(name):
@@ -85,14 +90,13 @@ class Template:
 
 
 class Character:
-    def __init__(self, template_name: str, template: Template):
+    def __init__(self, template: Template):
         self.__attributes = {}
-        self.template_name = template_name.lower()
         self.template = template
 
     def __repr__(self):
         return (
-            f"Character(name={self.template_name!r}, attributes={self.__attributes!r})"
+            f"Character(name={self.template.name!r}, attributes={self.__attributes!r})"
         )
 
     def set(self, name: str, value: Any):
@@ -106,7 +110,7 @@ class Character:
             return
         new_value = self._convert_str(value, attr_type)
         if attr_type and not isinstance(new_value, attr_type):
-            return
+            raise ValueError
         if isinstance(new_value, (int, float)) and str(value).startswith(("+", "-")):
             if name in self.__attributes:
                 convert_type = type(self.__attributes[name])
@@ -127,6 +131,13 @@ class Character:
                 result[name] = self.__attributes[name]
         return result
 
+    def display_group(self, name: str) -> str:
+        group = self.get_by_group_name(name)
+        results = []
+        for attr, data in group.items():
+            results.append(f"{self.template.get_display_name(attr)}: {data}")
+        return " ".join(results)
+
     def loads(self, attributes: Dict[str, Any]):
         for key, value in attributes.items():
             self.set(key, value)
@@ -138,7 +149,7 @@ class Character:
         return self.__attributes
 
     @staticmethod
-    def _convert_str(text: str, convert_type: type | None = None):
+    def _convert_str(text: str, convert_type: Optional[type] = None):
         def isdigit(s: str):
             return bool(re.match(r"^[+-]?\d+$", s))
 
@@ -150,9 +161,13 @@ class Character:
                 return int(text)
             elif isfloat(text):
                 return float(text)
+            elif Dicer.check(text):
+                return Dicer(text).roll().outcome
         else:
-            if convert_type in [list, dict]:
+            if convert_type in (list, dict):
                 return json.loads(text)
+            elif convert_type in (int, float) and Dicer.check(text):
+                return Dicer(text).roll().outcome
             else:
                 try:
                     return convert_type(text)
@@ -179,7 +194,7 @@ class TemplateManager:
         return self.__templates[name]
 
     def build_card(self, name: str):
-        return Character(name, self.get_template(name))
+        return Character(self.get_template(name))
 
 
 manager = TemplateManager()

@@ -14,8 +14,7 @@ from typing import Dict, Any, List, Optional, Set, Union
 
 from diceutils.exceptions import TooManyCardsError
 
-MAX_CARDS_PER_USER = 5
-# ROOT_PATH: Path = Path.home().joinpath(".dicergirl", "data")
+MAX_CARDS_PER_USER = 9
 
 
 class CachedProperty:
@@ -111,13 +110,16 @@ class CardsManager(metaclass=CardsManagerMeta):
             """
             CREATE TABLE IF NOT EXISTS user_cards (
                 user_id TEXT,
-                card_data TEXT
+                card_data TEXT,
+                selected_card INTERGER
             )
         """
         )
         self.conn.commit()
 
-    def save(self, cards: Dict[str, List[Dict[str, Any]]]) -> None:
+    def save(
+        self, cards: Dict[str, List[Dict[str, Any]]], selected_cards: Dict[str, int]
+    ) -> None:
         """Save user cards data.
 
         Args:
@@ -139,11 +141,14 @@ class CardsManager(metaclass=CardsManagerMeta):
             if len(card_data) > self.max_cards_per_user:
                 raise TooManyCardsError("Exceeded maximum allowed cards per user")
             cursor.execute(
-                "INSERT INTO user_cards VALUES (?, ?)", (user_id, str(card_data))
+                "INSERT INTO user_cards VALUES (?, ?, ?)",
+                (user_id, str(card_data), selected_cards.get(user_id) or 0),
             )
         self.conn.commit()
 
-    def load(self, target: str = "*") -> Union[Dict[str, Any], List[Dict[str, Any]]]:
+    def load(
+        self, target: str = "*"
+    ) -> tuple[Union[Dict[str, Any], List[Dict[str, Any]]], Union[Dict[str, int], int]]:
         """Load user cards data.
 
         Parameters:
@@ -154,82 +159,111 @@ class CardsManager(metaclass=CardsManagerMeta):
         """
         cursor = self.conn.cursor()
         if target.lower() == "*":
-            cursor.execute("SELECT user_id, card_data FROM user_cards")
+            cursor.execute("SELECT user_id, card_data, selected_card FROM user_cards")
             result = cursor.fetchall()
-            return {user_id: eval(card_data) for user_id, card_data in result}
+            datas = {}
+            selected_cards = {}
+            for user_id, card_data, selected_card in result:
+                datas[user_id] = eval(card_data)
+                selected_cards[user_id] = selected_card
+            return datas, selected_cards
         else:
             user_id = target
             cursor.execute(
-                "SELECT card_data FROM user_cards WHERE user_id=?", (user_id,)
+                "SELECT card_data, selected_card FROM user_cards WHERE user_id=?",
+                (user_id,),
             )
-            return eval(result[0]) if (result := cursor.fetchone()) else []
+            return (
+                (eval(result[0]), selected_card)
+                if (result := cursor.fetchone())
+                else []
+            )
 
     def close(self):
         """Close the database connection."""
         self.conn.close()
 
 
-class Cards(dict):
+class Cards:
     """A class for handling card operations such as saving, loading, updating, and deleting."""
 
-    cards_manager = CardsManager()
+    cards_manager: CardsManager
 
-    def __init__(self, mode: Optional[str] = None):
+    def __init__(self, mode: Optional[str] = None, store: bool = False):
         """Initialize Cards.
 
         Args:
             mode (str): Mode of the cards.
+            store (bool): Decide whether this class save to disk or memory. (Defaults to ``False``)
         """
         if mode is None or not mode:
-            mode = "Unknown Mode"
+            mode = "unknown_mode"
         self.data: Dict[str, List[Dict[str, Any]]] = {}
+        self.selected_cards: Dict[str, int] = {}
         self.mode = mode
+        self.cards_manager = CardsManager(f"{mode}.db" if store else ":memory:")
         self.load()
 
     def save(self):
         """Save the current card data."""
-        self.cards_manager.save(self.data)
+        self.cards_manager.save(self.data, self.selected_cards)
 
     def load(self, target: Union[Set[str], str] = "*"):
         """Load the card data."""
         if isinstance(target, str):
             if target == "*":
-                self.data = self.cards_manager.load()  # type: ignore[dict]
+                self.data, self.selected_cards = self.cards_manager.load()  # type: ignore[dict]
             else:
-                user_data = self.cards_manager.load(target)
+                user_data, selected_card = self.cards_manager.load(target)
                 if len(user_data) > 0:
-                    self.data[tartget] = user_data  # type: ignore[list]
+                    self.data[target] = user_data  # type: ignore[list]
+                    self.selected_cards[target] = selected_card
         elif isinstance(target, set):
             for user_id in target:
-                user_data = self.cards_manager.load(user_id)
+                user_data, selected_card = self.cards_manager.load(user_id)
                 if len(user_data) > 0:
                     self.data[user_id] = user_data  # type: ignore[list]
+                    self.selected_cards[user_id] = selected_card  # type: ignore[list]
+
+    def _get_selected_id(self, user_id: str) -> int:
+        return self.selected_cards.get(user_id) or 0
+
+    def new(self, user_id: str, attributes: Optional[Dict[str, Any]] = None) -> None:
+        """Set up a new card."""
+        length = len(self.data.get(user_id, []))
+        if length >= MAX_CARDS_PER_USER:
+            raise TooManyCardsError
+        self.update(user_id, length + 1, attributes=attributes)
 
     def update(
-        self, user_id: str, index: int = 0, cha_dict: Union[Dict[str, Any], None] = None
+        self,
+        user_id: str,
+        index: Optional[int] = None,
+        attributes: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Update Card Data.
 
         Args:
             user_id (str): target user id.
-            index (int): card index.
-            cha_dict (Union[Dict[str, Any], None]): card content, default is ``None``.
+            index (Optional[int]): card index.
+            attributes (Optional[Dict[str, Any]]): card content, default is ``None``.
         """
-        if cha_dict is None:
-            cha_dict = {}
+        index = index or self._get_selected_id(user_id)
+        if attributes is None:
+            attributes = {}
         if user_id not in self.data:
             self.data[user_id] = []
         if len(self.data[user_id]) == 0:
-            self.data[user_id].append(cha_dict)
+            self.data[user_id].append(attributes)
         if index > len(self.data[user_id]) - 1:
-            self.data[user_id].append(cha_dict)
+            self.data[user_id].append(attributes)
         else:
-            self.data[user_id][index].update(cha_dict)
+            self.data[user_id][index].update(attributes)
         self.save()
 
     def get(
         self, user_id: str, index: Optional[int] = None
-    ) -> Union[Dict[str, Any], List[Dict[str, Any]], None]:
+    ) -> Optional[Dict[str, Any]]:
         """Get Card Data.
 
         Args:
@@ -237,15 +271,18 @@ class Cards(dict):
             index (Optional[int]): index to select.
 
         Returns:
-            Union[Dict[str, Any], List[Dict[str, Any]], None]: card data.
+            Optional[Dict[str, Any]]: card data.
         """
-        if index is None:
-            return self.data.get(user_id)
+        index = index or self._get_selected_id(user_id)
         return (
             self.data.get(user_id, [])[index]
             if index is not None and 0 <= index < len(self.data.get(user_id, []))
             else None
         )
+
+    def getall(self, user_id: str) -> Optional[List[Dict[str, Any]]]:
+        """Get all card datas of a user."""
+        return self.data.get(user_id)
 
     def delete(self, user_id: str, index: Optional[int] = None) -> bool:
         """Delete Card Data.
@@ -268,3 +305,14 @@ class Cards(dict):
                 return True
 
         return False
+
+    def select(self, user_id: str, index: int = 0) -> None:
+        """Set a card index as default card."""
+        self.selected_cards[user_id] = index
+        self.save()
+
+    def clear(self, user_id: str) -> None:
+        """Clear all cards of a user."""
+        self.selected_cards[user_id] = 0
+        self.data[user_id] = []
+        self.save()

@@ -263,7 +263,7 @@ class Dicer:
         patterns = [r"\d*[dD]\d*", r"\d*[bB]\d+", r"\d*[pP]\d+", r"\d+"]
 
         for match in matches:
-            if match not in "-+*/()" and not all(
+            if match not in "-+*/()" and not any(
                 [re.match(pattern, match) for pattern in patterns]
             ):
                 return False
