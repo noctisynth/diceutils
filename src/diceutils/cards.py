@@ -12,7 +12,7 @@ from pathlib import Path
 from functools import wraps
 from typing import Dict, Any, List, Optional, Set, Union
 
-from diceutils.exceptions import TooManyCardsError
+from diceutils.exceptions import TooManyCardsError, UnkownMode
 
 MAX_CARDS_PER_USER = 9
 
@@ -52,10 +52,15 @@ def cached_method(func):
 
 class CardsPool(object):
     _cards_pool = {}
+    _cache_cards_pool = {}
 
     @CachedProperty
     def cards_pool(self):
         return self._cards_pool
+
+    @CachedProperty
+    def cache_cards_pool(self):
+        return self._cache_cards_pool
 
     def __str__(self) -> str:
         return self.__repr__()
@@ -64,12 +69,21 @@ class CardsPool(object):
         return self._cards_pool.__repr__()
 
     @staticmethod
-    def register(card_name: str):
-        CardsPool._cards_pool[card_name] = Cards(mode=card_name)
+    def register(mode_name: str):
+        if mode_name not in CardsPool._cards_pool.keys():
+            CardsPool._cards_pool[mode_name] = Cards(mode=mode_name, store=True)
+            CardsPool._cache_cards_pool[mode_name] = Cards(mode=mode_name)
 
     @staticmethod
-    def get(card_name: str):
-        return CardsPool._cards_pool[card_name]
+    def get(mode_name: str) -> Optional["Cards"]:
+        return CardsPool._cards_pool.get(mode_name)
+
+    @staticmethod
+    def reload(mode_name: str):
+        if mode_name not in CardsPool._cards_pool.keys():
+            raise UnkownMode(f'Mode "{mode_name}" was not regitered yet.')
+        CardsPool._cards_pool[mode_name] = Cards(mode=mode_name, store=True)
+        CardsPool._cache_cards_pool[mode_name] = Cards(mode=mode_name)
 
 
 class CardsManagerMeta(type):
