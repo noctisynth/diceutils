@@ -202,8 +202,8 @@ class TemplateManager:
         self.__templates[name.lower()] = Template(name, template)
 
     def get_template(self, name: str):
-        if name not in self.__templates:
-            raise KeyError("No template.")
+        if (name := name.lower()) not in self.__templates:
+            raise KeyError(f"No template named '{name}'.")
         return self.__templates[name]
 
     def build_card(self, name: str):
