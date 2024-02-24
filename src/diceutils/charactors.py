@@ -20,18 +20,19 @@ class Attribute:
 
 
 class AttributeGroup:
-    def __init__(self, name: str, attributes: List[Attribute]):
-        self.group_name = name
+    def __init__(self, index: str, name: str, attributes: List[Attribute]):
+        self.index = index
+        self.name = name
         self.attributes: List[Attribute] = attributes
 
     def __repr__(self):
-        return f"AttributeGroup(name={self.group_name!r}, attributes={self.attributes})"
+        return f"AttributeGroup(index={self.index!r}, attributes={self.attributes})"
 
 
 class Template:
     def __init__(self, name: str, template: List[AttributeGroup]):
         self.name = name
-        self.__raw_template = {group.group_name: group for group in template}
+        self.__raw_template = {group.index: group for group in template}
         # self.__attr_name_to_group_name = {
         #     definition.name: group.group_name
         #     for group in self.__raw_template.values()
@@ -77,6 +78,12 @@ class Template:
 
     def get_display_name(self, name: str) -> Optional[str]:
         return self.__template_display.get(name)
+
+    def has_group(self, group_name: str) -> bool:
+        return group_name in self.__raw_template
+
+    def get_group_display_name(self, group_name: str) -> Optional[str]:
+        return group.name if (group := self.__raw_template.get(group_name)) else None
 
     def is_valid_value(self, name: str, value):
         if not self._is_exist(name):
@@ -130,6 +137,12 @@ class Character:
             if name in self.__attributes:
                 result[name] = self.__attributes[name]
         return result
+
+    def get_group_display_name(self, name: str) -> Optional[str]:
+        return self.template.get_group_display_name(name)
+
+    def has_group(self, name: str) -> bool:
+        return self.template.has_group(name)
 
     def display_group(self, name: str) -> str:
         group = self.get_by_group_name(name)
