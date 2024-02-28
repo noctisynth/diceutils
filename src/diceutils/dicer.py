@@ -1,20 +1,17 @@
-from typing import List
-
+from typing import List, Union
 import abc
 import re
 import random
 
-
-EMPTY_STRING = ""
-EMPTY_LIST = []
+DiceType = Union["Dice", "DigitDice", "AwardDice", "PunishDice"]
 
 
 class BaseDice:
-    def __init__(self, roll_string: str = EMPTY_STRING) -> None:
+    def __init__(self, roll_string: str = "") -> None:
         self.roll_string = roll_string
-        self.db = EMPTY_STRING
+        self.db = ""
         self.outcome = 0
-        self.display = EMPTY_LIST
+        self.display = []
 
     def __repr__(self) -> str:
         return self.db.upper()
@@ -32,7 +29,7 @@ class BaseDice:
 class DigitDice(BaseDice):
     """数字骰"""
 
-    def __init__(self, roll_string: str = EMPTY_STRING) -> None:
+    def __init__(self, roll_string: str = "") -> None:
         super().__init__(roll_string=roll_string)
         if not roll_string.isdigit():
             raise ValueError
@@ -56,7 +53,7 @@ class Dice(BaseDice):
 
     def __init__(self, roll_string: str = "", explode: bool = False) -> None:
         super().__init__(roll_string=roll_string)
-        self.dices = EMPTY_LIST
+        self.dices = []
         self.great = False
         self.explode = explode
         self.parse()
@@ -214,20 +211,20 @@ class Dicer:
         ```
     """
 
-    def __init__(self, roll_string: str = EMPTY_STRING, explode: bool = False) -> None:
+    def __init__(self, roll_string: str = "", explode: bool = False) -> None:
         self.roll_string: str = roll_string
         self.explode: bool = explode
-        self.calc_list: List[str | Dice | DigitDice | AwardDice | PunishDice] = []
+        self.calc_list: List[Union[str, int, DiceType]] = []
         self.results: List[int] = []
         self.display: List[int | List[int]] = []
         self.outcome: int = 0
         self.great: bool = False
         self.dices: List[str] = []
 
-    def parse(self, roll_string: str = EMPTY_STRING, explode: bool = False):
+    def parse(self, roll_string: str = "", explode: bool = False):
         self.roll_string = roll_string if roll_string else self.roll_string
         self.calc_list = []
-        self.db = EMPTY_STRING
+        self.db = ""
         matches: List[str] = re.findall(
             r"\d*[a-zA-Z]\w*|\d+|[-+*/()]", self.roll_string
         )
@@ -278,10 +275,10 @@ class Dicer:
             if calc in ("+", "-", "*", "/", "(", ")"):
                 continue
 
-            outcome = calc.roll()
+            outcome = calc.roll()  # type: ignore
             self.calc_list[index] = outcome
             self.results.append(outcome)
-            self.display += calc.display
+            self.display += calc.display  # type: ignore
 
             if isinstance(calc, Dice) and self.explode:
                 if calc.great:

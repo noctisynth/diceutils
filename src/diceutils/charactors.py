@@ -92,7 +92,7 @@ class Template:
             return True
         return False
 
-    def _is_exist(self, name: str) -> bool:
+    def _is_exist(self, name: Optional[str]) -> bool:
         return name in self.__template
 
 
@@ -191,6 +191,7 @@ class Character:
 
 class TemplateManager:
     _instance = None
+    __templates: dict
 
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:
