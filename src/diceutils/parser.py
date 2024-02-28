@@ -1,4 +1,4 @@
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Sequence, Union
 from diceutils.exceptions import (
     NoneTypeCommandError,
     CommandRequired,
@@ -9,7 +9,7 @@ from diceutils.exceptions import (
 class Optional:
     """可选指令"""
 
-    def __init__(self, key: str, cls: type, default: Any = None):
+    def __init__(self, key: Union[Sequence[str], str], cls: type, default: Any = None):
         if not key:
             raise NoneTypeCommandError("Optional parameter must not be `None`.")
 
@@ -49,14 +49,12 @@ class Required:
 class Bool:
     """布尔指令"""
 
-    def __init__(self, key, default: bool = None):
+    def __init__(self, key, default: Union[bool, None] = None):
         if not key:
             raise NoneTypeCommandError("Bool parameter must not be `None`.")
 
         if isinstance(key, str):
-            key = [
-                key,
-            ]
+            key = [key]
 
         self.key = key
         self.default = default
@@ -143,9 +141,12 @@ class CommandParser:
     """
 
     def __init__(
-        self, commands: Commands = None, args: List[str] = None, auto: bool = False
+        self,
+        commands: Union[Commands, None] = None,
+        args: Union[List[str], None] = None,
+        auto: bool = False,
     ):
-        self.results: Dict[str, str] = {}
+        self.results: Dict[str, bool] = {}
 
         if not isinstance(commands, Commands):
             raise TypeError("指令槽必须为类`Commands`.")
@@ -153,13 +154,13 @@ class CommandParser:
             raise TypeError("参数槽必须为列或数组.")
 
         self.commands = commands
-        self.args = args
+        self.args = list(args or [])
         self.nothing = False
 
         if auto:
             self.shlex()
 
-    def shlex(self, args: List[str] = None):
+    def shlex(self, args: Union[Sequence[str], None] = None):
         """开始拆析指令集合"""
         if not args:
             args = self.args
@@ -168,7 +169,7 @@ class CommandParser:
         if not isinstance(args, (list, tuple)):
             raise TypeError("指令切片必须传入列或数组.")
 
-        results: Dict[str, str] = {}
+        results: Dict[str, bool] = {}
         nothing: bool = True
 
         for command in self.commands:
@@ -231,22 +232,3 @@ class CommandParser:
 
     def __iter__(self):
         return iter(self.results.items())
-
-
-if __name__ == "__main__":
-    cp = CommandParser(
-        Commands(
-            [
-                Positional("roll", int),
-                Bool("cache"),
-                Positional("test", int),
-                Optional("age", int),
-                Optional(("name", "n"), str, "欧若可"),
-                Optional("sex", str),
-            ]
-        ),
-    )
-    cp.args = ["cache", "age", "20", "n", "先生", "7", "10"]
-    cp.shlex()
-    print(cp.results)
-    print(type(cp.results["roll"]))
