@@ -1,11 +1,11 @@
-from diceutils.status import Status, StatusManager
-
+from diceutils.status import StatusPool, StatusManager
 import pytest
 
 
 @pytest.fixture
 def status():
-    return Status()
+    StatusPool.register("dicergirl")
+    return StatusPool.get("dicergirl")
 
 
 def test_manager_init():

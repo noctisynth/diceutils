@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Dict, Any, Optional, Tuple, Union
+from diceutils.exceptions import UnkownMode
 
 import sqlite3
 
@@ -72,13 +73,14 @@ class StatusManager:
 class Status:
     status_manager: StatusManager
 
-    def __init__(self):
+    def __init__(self, bot_name: str):
+        self.bot_name = bot_name
         self.data: Dict[str, Dict[str, Any]] = {}
-        self.status_manager = StatusManager(f"dicergirl.db")
+        self.status_manager = StatusManager(f"{bot_name}.db")
         self.load()
 
     def __repr__(self) -> str:
-        return f"Status(db='dicergirl.db')"
+        return f"Status(db='{self.bot_name}.db')"
 
     def saveall(self) -> None:
         self.status_manager.saveall(self.data)
@@ -102,3 +104,29 @@ class Status:
         if name not in self.data[session_id]:
             self.data[session_id][name] = False
         return self.data[session_id][name]
+
+
+class StatusPool(object):
+    _status_pool = {}
+
+    def __str__(self) -> str:
+        return self.__repr__()
+
+    def __repr__(self) -> str:
+        return self._status_pool.__repr__()
+
+    @staticmethod
+    def register(bot_name: str):
+        if bot_name not in StatusPool._status_pool.keys():
+            StatusPool._status_pool[bot_name] = Status(bot_name)
+
+    @staticmethod
+    def get(bot_name: str) -> Optional[Status]:
+        return StatusPool._status_pool.get(bot_name)
+
+    @staticmethod
+    def reload(bot_name: str):
+        if bot_name not in StatusPool._status_pool.keys():
+            raise UnkownMode(f'Bot "{bot_name}" was not regitered yet.')
+        StatusPool._status_pool[bot_name] = Status(bot_name)
+        return StatusPool._status_pool[bot_name]
