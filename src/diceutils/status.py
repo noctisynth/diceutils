@@ -119,6 +119,7 @@ class StatusPool(object):
     def register(bot_name: str):
         if bot_name not in StatusPool._status_pool.keys():
             StatusPool._status_pool[bot_name] = Status(bot_name)
+        return StatusPool._status_pool[bot_name]
 
     @staticmethod
     def get(bot_name: str) -> Optional[Status]:
