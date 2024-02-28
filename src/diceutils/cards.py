@@ -1,5 +1,6 @@
 """
-@author         :     HsiangNianian<i@jyunko.cn>
+@author         :     HsiangNianian<i@jyunko.cn>,
+                      苏向夜<fu050409@163.com>
 @date           :     Feb. 23, 2024.
 @description    :     This Module Provides Access to the Database and 
                       Database Connection Functions for Cards Management. 
@@ -188,10 +189,10 @@ class CardsManager(metaclass=CardsManagerMeta):
                 (user_id,),
             )
             return (
-                (eval(result[0]), selected_card)
+                (eval(result[0]), result[1])
                 if (result := cursor.fetchone())
                 else []
-            )
+            ) # type: ignore
 
     def close(self):
         """Close the database connection."""
@@ -231,7 +232,7 @@ class Cards:
                 user_data, selected_card = self.cards_manager.load(target)
                 if len(user_data) > 0:
                     self.data[target] = user_data  # type: ignore[list]
-                    self.selected_cards[target] = selected_card
+                    self.selected_cards[target] = selected_card # type: ignore
         elif isinstance(target, set):
             for user_id in target:
                 user_data, selected_card = self.cards_manager.load(user_id)
