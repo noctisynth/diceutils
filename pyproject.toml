@@ -12,10 +12,10 @@ requires-python = ">=3.8"
 readme = "README.md"
 license = {text = "GNU Affero General Public License v3"}
 classifiers = [
-    'Development Status :: Stable',
+    'Development Status :: 5 - Production/Stable',
     'Intended Audience :: Developers',
     'License :: OSI Approved :: GNU Affero General Public License v3',
-    'Programming Language :: Python :: 3.8+',
+    'Programming Language :: Python :: 3.12',
 ]
 
 [build-system]
