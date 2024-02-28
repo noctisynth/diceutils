@@ -1,16 +1,22 @@
 [project]
 name = "diceutils"
-version = "0.2.6"
-description = "基于水系 Infini 标准的骰娘相关组件和工具类"
+version = "0.2.7"
+description = "基于 Infini 标准的骰娘相关组件和工具类"
 authors = [
     {name = "苏向夜", email = "fu050409@163.com"},
 ]
 dependencies = [
     "infini>=2.0.1",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.8"
 readme = "README.md"
 license = {text = "GNU Affero General Public License v3"}
+classifiers = [
+    'Development Status :: Stable',
+    'Intended Audience :: Developers',
+    'License :: OSI Approved :: GNU Affero General Public License v3',
+    'Programming Language :: Python :: 3.8+',
+]
 
 [build-system]
 requires = ["pdm-backend"]
