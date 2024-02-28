@@ -116,7 +116,7 @@ class StatusPool(object):
         return self._status_pool.__repr__()
 
     @staticmethod
-    def register(bot_name: str):
+    def register(bot_name: str) -> Status:
         if bot_name not in StatusPool._status_pool.keys():
             StatusPool._status_pool[bot_name] = Status(bot_name)
         return StatusPool._status_pool[bot_name]
