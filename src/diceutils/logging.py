@@ -1,7 +1,6 @@
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Any, Literal, Optional, Tuple, Union
-from diceutils.exceptions import UnkownMode
+from typing import Dict, List, Any, Literal, Tuple, Union
 
 import sqlite3
 

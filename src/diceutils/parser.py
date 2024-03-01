@@ -6,7 +6,7 @@
 
 from typing import Dict, List, Any, Sequence, Union
 from diceutils.exceptions import (
-    NoneTypeCommandError,
+    NoneCommandError,
     CommandRequired,
     TooManyAliasCommandError,
 )
@@ -15,11 +15,11 @@ CommandType = Union["Optional", "Required", "Bool"]
 
 
 class Optional:
-    """可选指令"""
+    """OptionalCommand"""
 
     def __init__(self, key: Union[Sequence[str], str], cls: type, default: Any = None):
         if not key:
-            raise NoneTypeCommandError("Optional parameter must not be `None`.")
+            raise NoneCommandError("Optional parameter must not be `None`.")
 
         if isinstance(key, str):
             key = [
@@ -35,11 +35,11 @@ class Optional:
 
 
 class Required:
-    """必选指令"""
+    """Required Command."""
 
     def __init__(self, key, cls: type, default: Any = None):
         if not key:
-            raise NoneTypeCommandError("Required parameter must not be `None`.")
+            raise NoneCommandError("Required parameter must not be `None`.")
 
         if isinstance(key, str):
             key = [
@@ -55,11 +55,11 @@ class Required:
 
 
 class Bool:
-    """布尔指令"""
+    """Bool Command."""
 
     def __init__(self, key, default: Union[bool, None] = None):
         if not key:
-            raise NoneTypeCommandError("Bool parameter must not be `None`.")
+            raise NoneCommandError("Bool parameter must not be `None`.")
 
         if isinstance(key, str):
             key = [key]
@@ -72,11 +72,11 @@ class Bool:
 
 
 class Positional:
-    """定位指令"""
+    """Positional Command"""
 
     def __init__(self, key, cls: type, default: Any = None):
         if not key:
-            raise NoneTypeCommandError("Postional parameter must not be `None`.")
+            raise NoneCommandError("Postional parameter must not be `None`.")
 
         if isinstance(key, str):
             key = [
@@ -92,7 +92,7 @@ class Positional:
 
 
 class Commands(List[CommandType]):
-    """指令集合"""
+    """Command List."""
 
     def __init__(self, *args, **kwargs):
         super(Commands, self).__init__(*args, **kwargs)
@@ -122,19 +122,22 @@ class Commands(List[CommandType]):
 
 
 def required(commands: Commands):
+    """Expand required commands from `Commands` instance."""
     return commands.__required__()
 
 
 def optional(commands: Commands):
+    """Expand optional commands from `Commands` instance."""
     return commands.__optional__()
 
 
 def positional(commands: Commands):
+    """Expand positional commands from `Commands` instance."""
     return commands.__positional__()
 
 
 class CommandParser:
-    """指令解析类
+    """Command Parser
     示例:
         ```python
         cp = CommandParser(
@@ -169,7 +172,7 @@ class CommandParser:
             self.shlex()
 
     def shlex(self, args: Union[Sequence[str], None] = None):
-        """开始拆析指令集合"""
+        """Start to parser a splited command."""
         if not args:
             args = self.args
         iter_args = [arg for arg in args]

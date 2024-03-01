@@ -2,10 +2,12 @@ class DiceutilsException(Exception):
     """Base Exception for Diceutils."""
 
 
-class NoneTypeCommandError(DiceutilsException): ...
+class NoneCommandError(DiceutilsException):
+    """Provided a `None` for command key."""
 
 
-class TooManyAliasCommandError(DiceutilsException): ...
+class TooManyAliasCommandError(DiceutilsException):
+    """Too many alias command provided."""
 
 
 class CommandRequired(DiceutilsException):

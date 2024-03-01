@@ -1,3 +1,9 @@
+"""
+@author         :     苏向夜 <fu050409@163.com>
+@date           :     March. 1st, 2024.
+@description    :     This Module Provides Status Manager to Save Status Value into Database.
+"""
+
 from pathlib import Path
 from typing import Dict, Any, Optional, Tuple, Union
 from diceutils.exceptions import UnkownMode
