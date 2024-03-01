@@ -1,0 +1,182 @@
+from datetime import datetime
+from pathlib import Path
+from typing import Dict, List, Any, Literal, Optional, Tuple, Union
+from diceutils.exceptions import UnkownMode
+
+import sqlite3
+
+MAX_LOGGERS_PER_SESSION = 3
+
+
+class LogManager:
+    def __init__(
+        self,
+        db_path: Union[str, Path] = ":memory:",
+    ):
+        self.db_path = db_path
+        self.conn = sqlite3.connect(db_path)
+        self._create_table()
+
+    def _create_table(self):
+        cursor = self.conn.cursor()
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS log (
+                session_id TEXT,
+                id TEXT,
+                user_id TEXT,
+                user_role TEXT,
+                date TEXT,
+                data TEXT,
+                message_sequence TEXT
+            );
+            """
+        )
+        self.conn.commit()
+
+    def _insert(
+        self, cursor: sqlite3.Cursor, data: Tuple[str, str, str, str, str, str, str]
+    ):
+        cursor.execute(
+            """
+            INSERT INTO log (session_id, id, user_id, user_role, date, data, message_sequence) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            data,
+        )
+
+    def add(
+        self,
+        session_id: str,
+        id: str,
+        *,
+        user_id: str,
+        user_role: Literal["KP", "PL", "OB"],
+        date: str,
+        data: str,
+        message_sequence: str,
+    ) -> None:
+        cursor = self.conn.cursor()
+        self._insert(
+            cursor, (session_id, id, user_id, user_role, date, data, message_sequence)
+        )
+        self.conn.commit()
+
+    def loadall(self) -> Dict[str, Dict[str, List[Dict[str, Any]]]]:
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT session_id, id, user_id, user_role, date, data FROM log")
+        result = cursor.fetchall()
+        datas: Dict[str, Dict[str, List[Dict[str, Any]]]] = {}
+        for session_id, id, user_id, user_role, date, data in result:
+            if session_id not in datas:
+                datas[session_id] = {}
+            if id not in datas[session_id]:
+                datas[session_id][id] = []
+
+            datas[session_id][id].append(
+                {
+                    "user_id": user_id,
+                    "user_role": user_role,
+                    "date": date,
+                    "data": eval(data),
+                }
+            )
+
+        return datas
+
+    def load(self, session_id: str, id: str) -> List[Dict[str, Any]]:
+        cursor = self.conn.cursor()
+        cursor.execute(
+            "SELECT user_id, user_role, date, data FROM log "
+            "WHERE session_id = ? AND id = ?",
+            (session_id, id),
+        )
+
+        result = cursor.fetchall()
+        datas: List[Dict[str, Any]] = []
+        for user_id, user_role, date, data in result:
+            datas.append(
+                {
+                    "user_id": user_id,
+                    "user_role": user_role,
+                    "date": date,
+                    "data": eval(data),
+                }
+            )
+
+        return datas
+
+    def remove(self, session_id: str, id: str, message_sequence: str):
+        cursor = self.conn.cursor()
+        cursor.execute(
+            "DELETE FROM log WHERE session_id = ? AND id = ? AND message_sequence = ?",
+            (session_id, id, message_sequence),
+        )
+        self.conn.commit()
+
+    def clear(self, session_id: str, id: str) -> None:
+        cursor = self.conn.cursor()
+        cursor.execute(
+            "DELETE FROM log WHERE session_id = ? AND id = ?", (session_id, id)
+        )
+        self.conn.commit()
+
+    def close(self):
+        self.conn.close()
+
+
+class Logger:
+    log_manager: LogManager
+
+    def __init__(self, db_path: Union[Path, str] = "dicergirl.db"):
+        self.log_manager = LogManager(db_path)
+        self.db_path = db_path
+        self.logs = {}
+
+    def __repr__(self) -> str:
+        return f"Logger(db='{self.db_path}')"
+
+    def rescue(self) -> None:
+        self.log_manager.close()
+
+    def load(self, session_id: str, id: Union[int, str]) -> List[Dict[str, Any]]:
+        return self.log_manager.load(session_id=session_id, id=str(id))
+
+    def loadall(self) -> Dict[str, Dict[str, List[Dict[str, Any]]]]:
+        return self.log_manager.loadall()
+
+    def add(
+        self,
+        session_id: str,
+        id: Union[str, int],
+        *,
+        user_id: str,
+        user_role: Literal["KP", "PL", "OB"] = "OB",
+        data: List[Any] = [],
+        message_sequence: str = "",
+    ) -> None:
+        id = str(id)
+        if not data:
+            raise ValueError("Could not log an empty data.")
+        if user_role not in ("KP", "PL", "OB"):
+            raise ValueError(f"Unknown user role '{user_role}'.")
+        if not message_sequence or not isinstance(message_sequence, str):
+            raise ValueError("Message sequence string is require.")
+
+        self.log_manager.add(
+            session_id,
+            id,
+            user_id=user_id,
+            user_role=user_role,
+            date=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            data=str(data),
+            message_sequence=message_sequence,
+        )
+
+    def remove(self, session_id: str, id: Union[str, int], message_sequence: str):
+        self.log_manager.remove(
+            session_id=session_id, id=str(id), message_sequence=message_sequence
+        )
+
+    def clear(self, session_id: str, id: Union[str, int]) -> None:
+        self.log_manager.clear(session_id=session_id, id=str(id))
