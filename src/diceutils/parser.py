@@ -1,9 +1,17 @@
+"""
+@author         :     苏向夜 <fu050409@163.com>
+@date           :     March. 1st, 2024.
+@description    :     This Module Provides Parser Methods or Commands on Messaging Platforms.
+"""
+
 from typing import Dict, List, Any, Sequence, Union
 from diceutils.exceptions import (
     NoneTypeCommandError,
     CommandRequired,
     TooManyAliasCommandError,
 )
+
+CommandType = Union["Optional", "Required", "Bool"]
 
 
 class Optional:
@@ -83,7 +91,7 @@ class Positional:
         return self.key[0]
 
 
-class Commands(list):
+class Commands(List[CommandType]):
     """指令集合"""
 
     def __init__(self, *args, **kwargs):
@@ -153,7 +161,7 @@ class CommandParser:
         if args and not isinstance(args, (list, tuple)):
             raise TypeError("参数槽必须为列或数组.")
 
-        self.commands = commands
+        self.commands: Commands = commands
         self.args = list(args or [])
         self.nothing = False
 
