@@ -131,6 +131,7 @@ class CardsManager(metaclass=CardsManagerMeta):
         """
         )
         self.conn.commit()
+        cursor.close()
 
     def save(
         self, cards: Dict[str, List[Dict[str, Any]]], selected_cards: Dict[str, int]
@@ -148,6 +149,7 @@ class CardsManager(metaclass=CardsManagerMeta):
             cursor = self.conn.cursor()
             cursor.execute("DELETE FROM user_cards")
             self.conn.commit()
+            cursor.close()
             return
 
         cursor = self.conn.cursor()
@@ -160,6 +162,7 @@ class CardsManager(metaclass=CardsManagerMeta):
                 (user_id, str(card_data), selected_cards.get(user_id) or 0),
             )
         self.conn.commit()
+        cursor.close()
 
     def load(
         self, target: str = "*"
@@ -181,6 +184,7 @@ class CardsManager(metaclass=CardsManagerMeta):
             for user_id, card_data, selected_card in result:
                 datas[user_id] = eval(card_data)
                 selected_cards[user_id] = selected_card
+            cursor.close()
             return datas, selected_cards
         else:
             user_id = target
@@ -188,9 +192,13 @@ class CardsManager(metaclass=CardsManagerMeta):
                 "SELECT card_data, selected_card FROM user_cards WHERE user_id=?",
                 (user_id,),
             )
-            return (
-                (eval(result[0]), result[1]) if (result := cursor.fetchone()) else []
-            )  # type: ignore
+            results = (
+                (eval(result[0]), result[1])
+                if (result := cursor.fetchone())
+                else ([], 0)
+            )
+            cursor.close()
+            return results
 
     def close(self):
         """Close the database connection."""
@@ -225,20 +233,26 @@ class Cards:
         """Load the card data."""
         if isinstance(target, str):
             if target == "*":
-                self.data, self.selected_cards = self.cards_manager.load()  # type: ignore[dict]
+                data, selected_cards = self.cards_manager.load()
+                assert isinstance(data, dict)
+                assert isinstance(selected_cards, dict)
+                self.data = data
+                self.selected_cards = selected_cards
             else:
-                user_data, selected_card = self.cards_manager.load(target)
+                user_data, selected_cards = self.cards_manager.load(target)
                 assert isinstance(user_data, list)
-                assert isinstance(selected_card, int)
+                assert isinstance(selected_cards, dict)
                 if len(user_data) > 0:
                     self.data[target] = user_data
-                    self.selected_cards[target] = selected_card
+                    self.selected_cards = selected_cards
         elif isinstance(target, set):
             for user_id in target:
                 user_data, selected_card = self.cards_manager.load(user_id)
                 if len(user_data) > 0:
-                    self.data[user_id] = user_data  # type: ignore[list]
-                    self.selected_cards[user_id] = selected_card  # type: ignore[list]
+                    assert isinstance(user_data, list)
+                    assert isinstance(selected_card, int)
+                    self.data[user_id] = user_data
+                    self.selected_cards[user_id] = selected_card
 
     def _get_selected_id(self, user_id: str) -> int:
         return self.selected_cards.get(user_id) or 0
@@ -316,7 +330,10 @@ class Cards:
                 del self.data[user_id]
                 self.save()
                 return True
-            if 0 <= index < len(self.data[user_id]) and self.data[user_id][index] is not None:  # type: ignore[dict]
+            if (
+                0 <= index < len(self.data[user_id])
+                and self.data[user_id][index] is not None
+            ):
                 del self.data[user_id][index]
                 self.save()
                 return True
