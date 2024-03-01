@@ -189,10 +189,8 @@ class CardsManager(metaclass=CardsManagerMeta):
                 (user_id,),
             )
             return (
-                (eval(result[0]), result[1])
-                if (result := cursor.fetchone())
-                else []
-            ) # type: ignore
+                (eval(result[0]), result[1]) if (result := cursor.fetchone()) else []
+            )  # type: ignore
 
     def close(self):
         """Close the database connection."""
@@ -232,7 +230,7 @@ class Cards:
                 user_data, selected_card = self.cards_manager.load(target)
                 if len(user_data) > 0:
                     self.data[target] = user_data  # type: ignore[list]
-                    self.selected_cards[target] = selected_card # type: ignore
+                    self.selected_cards[target] = selected_card  # type: ignore
         elif isinstance(target, set):
             for user_id in target:
                 user_data, selected_card = self.cards_manager.load(user_id)
@@ -245,10 +243,12 @@ class Cards:
 
     def new(self, user_id: str, attributes: Optional[Dict[str, Any]] = None) -> None:
         """Set up a new card."""
-        length = len(self.data.get(user_id, []))
+        length = self.count(user_id)
         if length >= MAX_CARDS_PER_USER:
-            raise TooManyCardsError
-        self.update(user_id, length + 1, attributes=attributes)
+            raise TooManyCardsError(
+                f"Cards for a user should not more than {MAX_CARDS_PER_USER}."
+            )
+        self.update(user_id, length, attributes=attributes or {})
 
     def update(
         self,
@@ -323,8 +323,21 @@ class Cards:
 
     def select(self, user_id: str, index: int = 0) -> None:
         """Set a card index as default card."""
+        if index > self.count(user_id) - 1:
+            raise TooManyCardsError(
+                f"This user has only {self.count(user_id)} cards, "
+                f"but index {index} was provided."
+            )
         self.selected_cards[user_id] = index
         self.save()
+
+    def get_selected_id(self, user_id: str) -> int:
+        """Get the current selected card id."""
+        return self._get_selected_id(user_id)
+
+    def count(self, user_id: str) -> int:
+        """Count the number of a related user's cards."""
+        return len(self.data.get(user_id, []))
 
     def clear(self, user_id: str) -> None:
         """Clear all cards of a user."""

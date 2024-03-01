@@ -1,4 +1,5 @@
-class DiceutilsException(Exception): ...
+class DiceutilsException(Exception):
+    """Base Exception for Diceutils."""
 
 
 class NoneTypeCommandError(DiceutilsException): ...
@@ -7,11 +8,13 @@ class NoneTypeCommandError(DiceutilsException): ...
 class TooManyAliasCommandError(DiceutilsException): ...
 
 
-class CommandRequired(DiceutilsException): ...
+class CommandRequired(DiceutilsException):
+    """Raises when required command not provided."""
 
 
 class TooManyCardsError(Exception):
-    """单个用户缓存中存储的卡数量过多"""
+    """Raises when provided number bigger than expected."""
 
 
-class UnkownMode(DiceutilsException): ...
+class UnkownMode(DiceutilsException):
+    """Raises when provided mode name is unkown."""
