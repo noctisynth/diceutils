@@ -1,3 +1,4 @@
+from diceutils.exceptions import TooManyLoggersError
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Any, Literal, Tuple, Union
@@ -32,6 +33,7 @@ class LogManager:
             """
         )
         self.conn.commit()
+        cursor.close()
 
     def _insert(
         self, cursor: sqlite3.Cursor, data: Tuple[str, str, str, str, str, str, str]
@@ -55,11 +57,30 @@ class LogManager:
         data: str,
         message_sequence: str,
     ) -> None:
+        count = self.count(session_id)
+        if (
+            count == MAX_LOGGERS_PER_SESSION and int(id) >= MAX_LOGGERS_PER_SESSION
+        ) or count > MAX_LOGGERS_PER_SESSION:
+            raise TooManyLoggersError(
+                f"Too many loggers, expected less than {MAX_LOGGERS_PER_SESSION}, "
+                f"but given index is '{id}'."
+            )
         cursor = self.conn.cursor()
         self._insert(
             cursor, (session_id, id, user_id, user_role, date, data, message_sequence)
         )
         self.conn.commit()
+        cursor.close()
+
+    def count(self, session_id: str) -> int:
+        cursor = self.conn.cursor()
+        cursor.execute(
+            "SELECT COUNT(DISTINCT id) AS unique_ids FROM log WHERE session_id = ?;",
+            (session_id,),
+        )
+        count = cursor.fetchone()[0]
+        cursor.close()
+        return count
 
     def loadall(self) -> Dict[str, Dict[str, List[Dict[str, Any]]]]:
         cursor = self.conn.cursor()
@@ -81,6 +102,7 @@ class LogManager:
                 }
             )
 
+        cursor.close()
         return datas
 
     def load(self, session_id: str, id: str) -> List[Dict[str, Any]]:
@@ -103,6 +125,7 @@ class LogManager:
                 }
             )
 
+        cursor.close()
         return datas
 
     def remove(self, session_id: str, id: str, message_sequence: str):
@@ -112,6 +135,7 @@ class LogManager:
             (session_id, id, message_sequence),
         )
         self.conn.commit()
+        cursor.close()
 
     def clear(self, session_id: str, id: str) -> None:
         cursor = self.conn.cursor()
@@ -119,6 +143,7 @@ class LogManager:
             "DELETE FROM log WHERE session_id = ? AND id = ?", (session_id, id)
         )
         self.conn.commit()
+        cursor.close()
 
     def close(self):
         self.conn.close()
@@ -143,6 +168,13 @@ class Logger:
 
     def loadall(self) -> Dict[str, Dict[str, List[Dict[str, Any]]]]:
         return self.log_manager.loadall()
+
+    def next_id(self, session_id: str):
+        return (
+            count
+            if (count := self.log_manager.count(session_id)) <= MAX_LOGGERS_PER_SESSION
+            else None
+        )
 
     def add(
         self,
