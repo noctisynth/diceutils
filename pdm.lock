@@ -3,10 +3,9 @@
 
 [metadata]
 groups = ["default", "dev"]
-cross_platform = true
-static_urls = false
-lock_version = "4.3"
-content_hash = "sha256:f36f1e1e039b1526b0ae8cb4d569a1c279643ab2592f7eefc386270977842985"
+strategy = ["cross_platform"]
+lock_version = "4.4.1"
+content_hash = "sha256:30b39875798dec765b7ac0c4b83e101aa97ae0c46b8deeb5c5b240e301770005"
 
 [[package]]
 name = "colorama"
@@ -30,16 +29,16 @@ files = [
 
 [[package]]
 name = "infini"
-version = "2.0.4"
-requires_python = ">=3.10"
-summary = "Infini 核心标准文本输入输出模块"
+version = "2.0.6"
+requires_python = ">=3.8"
+summary = "Infini 轻量输入输出流框架"
 dependencies = [
     "jinja2>=3.1.3",
     "rich>=13.7.0",
 ]
 files = [
-    {file = "infini-2.0.4-py3-none-any.whl", hash = "sha256:024f45fc6a57b111a27df2968e26da123f54ce6a764925dceef3d195798620cf"},
-    {file = "infini-2.0.4.tar.gz", hash = "sha256:e6341774069a2b2f898a1b9d9928c4aed7ce1949006e03d583a907a8b60e9523"},
+    {file = "infini-2.0.6-py3-none-any.whl", hash = "sha256:cf4bae695c53f4965e9e9fba9d5b1c2586e5082adfe0076f8595295affdb1dc5"},
+    {file = "infini-2.0.6.tar.gz", hash = "sha256:b255a445d09a7e4a67a40e07c8343693dbeffdfaeae5288c9857782756d21c93"},
 ]
 
 [[package]]
@@ -183,6 +182,7 @@ summary = "Render rich text, tables, progress bars, syntax highlighting, markdow
 dependencies = [
     "markdown-it-py>=2.2.0",
     "pygments<3.0.0,>=2.13.0",
+    "typing-extensions<5.0,>=4.0.0; python_version < \"3.9\"",
 ]
 files = [
     {file = "rich-13.7.0-py3-none-any.whl", hash = "sha256:6da14c108c4866ee9520bbffa71f6fe3962e193b7da68720583850cd4548e235"},
@@ -197,4 +197,14 @@ summary = "A lil' TOML parser"
 files = [
     {file = "tomli-2.0.1-py3-none-any.whl", hash = "sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc"},
     {file = "tomli-2.0.1.tar.gz", hash = "sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f"},
+]
+
+[[package]]
+name = "typing-extensions"
+version = "4.10.0"
+requires_python = ">=3.8"
+summary = "Backported and Experimental Type Hints for Python 3.8+"
+files = [
+    {file = "typing_extensions-4.10.0-py3-none-any.whl", hash = "sha256:69b1a937c3a517342112fb4c6df7e72fc39a38e7891a5730ed4985b5214b5475"},
+    {file = "typing_extensions-4.10.0.tar.gz", hash = "sha256:b0abd7c89e8fb96f98db18d86106ff1d90ab692004eb746cf6eda2682f91b3cb"},
 ]
