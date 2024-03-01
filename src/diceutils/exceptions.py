@@ -14,8 +14,12 @@ class CommandRequired(DiceutilsException):
     """Raises when required command not provided."""
 
 
-class TooManyCardsError(Exception):
-    """Raises when provided number bigger than expected."""
+class TooManyCardsError(DiceutilsException):
+    """Raises when provided index number bigger than expected."""
+
+
+class TooManyLoggersError(DiceutilsException):
+    """Raises when loggers count more than expected."""
 
 
 class UnkownMode(DiceutilsException):
