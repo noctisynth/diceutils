@@ -70,7 +70,7 @@ def format_msg(message, begin=None, zh_en=True) -> List[str]:
     msgs = format_str(message, begin=begin)
     outer = []
     regex = (
-        r'([+-]?\d+)|("[^"]+")|([a-zA-Z\u4e00-\u9fa5]+)'
+        r'([+-]?\d+(?:d\d+)?)|("[^"]+")|([a-zA-Z\u4e00-\u9fa5]+)'
         if not zh_en
         else r'([+-]?\d+)|([a-zA-Z]+)|("[^"]+")|([\u4e00-\u9fa5]+)'
     )
