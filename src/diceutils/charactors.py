@@ -174,6 +174,8 @@ class Character:
                 return int(text)
             elif isfloat(text):
                 return float(text)
+            elif text == "/":
+                return 0
             elif Dicer.check(text):
                 return Dicer(text).roll().outcome
         else:
