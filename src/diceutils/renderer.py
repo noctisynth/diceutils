@@ -1,26 +1,38 @@
+from typing import Dict, List, Any, Optional
+from reportlab.pdfgen import canvas
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Image as PDFImage, Table
+from docx.document import Document as DocumentType
+from docx import Document
 from enum import Enum
-from typing import Dict, List, Any, Self, Type, Optional
-import abc, re, datetime
+
+import abc
+import re
+import random
 
 
-class Element(abc.ABC):
+class Element(metaclass=abc.ABCMeta):
     def __init__(self, _type: str, content: str) -> None:
         self.type: str = _type
         self.content: str = content
+        self._tag: str = "act"
 
     def __repr__(self) -> str:
         return f"Element(type={self.type}, content={self.content})"
+
+    @property
+    def tag(self) -> str:
+        return self._tag
 
 
 class Text(Element):
     def __init__(self, text, tag: Optional[str] = None):
         super().__init__("text", text)
-        self._tag = tag
+        self._tag = tag or self._tag
 
     def __repr__(self) -> str:
         return f"Text(type={self.type!r}, content={self.content!r}, tag={self._tag!r})"
 
-    def tag(self, tag: str):
+    def set_tag(self, tag: str):
         self._tag = tag
 
 
@@ -101,15 +113,7 @@ class ExportConfig:
         self.display_year_month_day = False  # 年月日显示
 
 
-class IRenderer(metaclass=abc.ABCMeta):
-    name: str
-
-    def __init__(self, msgs: Messages, config: ExportConfig, path: str) -> None:
-        self.raw_messages: Messages = msgs
-        self.parsed_messages: Messages = Messages()
-        self.config: ExportConfig = config
-        self.path: str = path
-
+class Renderer(metaclass=abc.ABCMeta):
     @staticmethod
     def split_and_label(text: str) -> Dict[str, str]:
         pattern = r"“[^”]*”|[^“”]+"
@@ -125,8 +129,8 @@ class IRenderer(metaclass=abc.ABCMeta):
 
         return result_dict
 
-    def parse_message(self, message: Message) -> Optional[Message]:
-        config = self.config
+    @staticmethod
+    def parse_message(message: Message, config: ExportConfig) -> Optional[Message]:
         elements = message.elements
 
         if len(elements) == 0:
@@ -146,37 +150,98 @@ class IRenderer(metaclass=abc.ABCMeta):
             return None
 
         if is_text and is_external_comment:
-            first_ele.tag("outside")
+            first_ele.set_tag("outside")
             for ele in ele_iter:
                 if isinstance(ele, Text):
-                    ele.tag("outside")
+                    ele.set_tag("outside")
             return message
 
         new_elements = []
         if is_text:
-            for text, tag in self.split_and_label(first_ele.content).items():
+            for text, tag in Renderer.split_and_label(first_ele.content).items():
                 new_elements.append(Text(text, tag))
 
         for ele in ele_iter:
             if isinstance(ele, Text):
-                for text, tag in self.split_and_label(ele.content).items():
+                for text, tag in Renderer.split_and_label(ele.content).items():
                     new_elements.append(Text(text, tag))
 
         message.elements = new_elements
         return message
 
-    def parse(self) -> Self:
-        for msg in self.raw_messages:
-            message = self.parse_message(msg)
-            if message:
-                self.parsed_messages.append(message)
-        return self
+    @abc.abstractmethod
+    def render_message(self, message: Message) -> None:
+        raise NotImplementedError
+
+    @staticmethod
+    def render(
+        messages: Messages,
+        renderer: "Renderer",
+        config: Optional[ExportConfig] = None,
+    ) -> "Renderer":
+        for message in messages:
+            if message := renderer.parse_message(message, config or ExportConfig()):
+                renderer.render_message(message)
+        return renderer
 
     @abc.abstractmethod
-    def export(self) -> None:
+    def export(self, filename: str) -> None:
         raise NotImplementedError
 
 
-class DocxRenderer(IRenderer):
-    def export(self) -> None:
-        return
+# class PDFRenderer(Renderer):
+#     _canvas: canvas.Canvas
+
+#     def __init__(self) -> None:
+#         self._canvas = canvas.Canvas(str(random.randbytes(5)) + ".pdf")
+
+#     def export(self, filename: str) -> None:
+#         return self._canvas._doc.SaveToFile(filename=filename, canvas=self._canvas)
+
+#     def render_message(self, message: Message):
+#         self._canvas.drawText(Paragraph("dde"))
+#         for element in message.elements:
+#             if element.type == "text":
+#                 if element.tag == "act":
+#                     ...
+#                 elif element.tag == "outside":
+#                     ...
+#                 elif element.tag == "speak":
+#                     ...
+
+
+# class DocxRenderer(Renderer):
+#     document: DocumentType
+
+#     def __init__(self) -> None:
+#         self.document = Document()
+#         self.document.styles["Normal"].font.name = "SimSun"
+
+#     def export(self) -> None:
+#         self.document.save("a.docx")
+
+#     def render_message(self, message: Message) -> None:
+#         paragraph = self.document.add_paragraph()
+#         for element in message.elements:
+#             if element.type == "text":
+#                 if element.tag == "act":
+#                     run = paragraph.add_run(element.content)
+#                     run.bold = True
+#                     run.font.name = "SimSun"
+#                 elif element.tag == "outside":
+#                     paragraph.add_run("（")
+#                     content = element.content.strip("（）()")
+#                     run = paragraph.add_run(content)
+#                     run.font.color.rgb = (207, 210, 210)
+#                     run.font.name = "SimSun"
+#                 elif element.tag == "speak":
+#                     content = element.content.strip('“”""')
+#                     paragraph.add_run("“")
+#                     run = paragraph.add_run(content)
+#                     run.font.name = "Microsoft YaHei"
+#                     paragraph.add_run("”")
+#             else:
+#                 # self.document.add_picture()
+#                 ...
+
+#         return
