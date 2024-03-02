@@ -13,22 +13,15 @@ class Element(abc.ABC):
 
 
 class Text(Element):
-    def __init__(self, text, tags: List = []):
+    def __init__(self, text, tag: Optional[str] = None):
         super().__init__("text", text)
-        self.tags = tags
+        self._tag = tag
 
     def __repr__(self) -> str:
-        if len(self.tags) == 0:
-            return f"Text({self.content!r})"
-        else:
-            return f"Text(content={self.content!r}, tags={self.tags})"
+        return f"Text(type={self.type!r}, content={self.content!r}, tag={self._tag!r})"
 
-    def add_tag(self, tag: str):
-        self.tags.append(tag)
-
-    def add_tags(self, tags: List[str] = []):
-        for tag in tags:
-            self.tags.append(tag)
+    def tag(self, tag: str):
+        self._tag = tag
 
 
 class Image(Element):
@@ -36,19 +29,25 @@ class Image(Element):
         super().__init__("image", url)
 
     def __repr__(self) -> str:
-        return f"Image({self.content!r})"
+        return f"Image(type={self.type!r}, url={self.content!r})"
 
 
 class Role(Enum):
-    DICER = -1,
-    GM = 0,
-    PL = 1,
-    OB = 2,
+    DICER = -1
+    GM = 0
+    PL = 1
+    OB = 2
 
 
 class Message:
-    def __init__(self, user_code: str, role: Role, nickname: str, date: datetime.datetime,
-                 elements: List[Element] = []):
+    def __init__(
+        self,
+        user_code: str,
+        role: Role,
+        nickname: str,
+        date: str,
+        elements: List[Element] = [],
+    ):
         self.user_code = user_code
         self.nickname = nickname
         self.role = role
@@ -56,18 +55,24 @@ class Message:
         self.elements = elements
 
     def __repr__(self) -> str:
-        return f"Message(user_code={self.user_code}, role={self.role}, nickname={self.nickname}, elements={self.elements}, date={self.date})"
+        return f"Message(user_code={self.user_code!r}, role={self.role}, nickname={self.nickname!r}, elements={self.elements!r}, date={self.date!r})"
 
 
-class Messages(list):
-
+class Messages(List[Message]):
     def __init__(self, messages: List[Message] = []):
         super().__init__(messages)
 
     def append(self, message: Message):
         return super().append(message)
 
-    def add_message(self, user_code: str, role: Role, nickname: str, date, content: List[Dict[str, Any]]):
+    def add_message(
+        self,
+        user_code: str,
+        role: Role,
+        nickname: str,
+        date: str,
+        content: List[Dict[str, Any]],
+    ):
         elements = []
         try:
             for ele in content:
@@ -96,10 +101,10 @@ class ExportConfig:
         self.display_year_month_day = False  # 年月日显示
 
 
-class IRenderer(abc.ABC):
+class IRenderer(metaclass=abc.ABCMeta):
     name: str
 
-    def __init__(self, msgs: Messages, config: ExportConfig, path: str):
+    def __init__(self, msgs: Messages, config: ExportConfig, path: str) -> None:
         self.raw_messages: Messages = msgs
         self.parsed_messages: Messages = Messages()
         self.config: ExportConfig = config
@@ -107,20 +112,20 @@ class IRenderer(abc.ABC):
 
     @staticmethod
     def split_and_label(text: str) -> Dict[str, str]:
-        pattern = r'“[^”]*”|[^“”]+'
-        parts = re.findall(pattern, text)
+        pattern = r"“[^”]*”|[^“”]+"
+        parts: List[str] = re.findall(pattern, text)
 
         result_dict = {}
 
         for part in parts:
-            if part.startswith('“') and part.endswith('”'):
-                result_dict[part] = 'speak'
+            if part.startswith("“") and part.endswith("”"):
+                result_dict[part] = "speak"
             else:
-                result_dict[part] = 'act'
+                result_dict[part] = "act"
 
         return result_dict
 
-    def render_message(self, message: Message) -> Optional[Message]:
+    def parse_message(self, message: Message) -> Optional[Message]:
         config = self.config
         elements = message.elements
 
@@ -141,45 +146,37 @@ class IRenderer(abc.ABC):
             return None
 
         if is_text and is_external_comment:
-            first_ele.add_tag("outside")
+            first_ele.tag("outside")
             for ele in ele_iter:
                 if isinstance(ele, Text):
-                    ele.add_tag("outside")
+                    ele.tag("outside")
             return message
 
         new_elements = []
         if is_text:
             for text, tag in self.split_and_label(first_ele.content).items():
-                new_elements.append(Text(text, [tag]))
+                new_elements.append(Text(text, tag))
 
         for ele in ele_iter:
             if isinstance(ele, Text):
                 for text, tag in self.split_and_label(ele.content).items():
-                    new_elements.append(Text(text, [tag]))
+                    new_elements.append(Text(text, tag))
 
         message.elements = new_elements
         return message
 
-    def render(self) -> Self:
+    def parse(self) -> Self:
         for msg in self.raw_messages:
-            message = self.render_message(msg)
+            message = self.parse_message(msg)
             if message:
                 self.parsed_messages.append(message)
         return self
 
     @abc.abstractmethod
     def export(self) -> None:
-        pass
+        raise NotImplementedError
 
 
 class DocxRenderer(IRenderer):
-    name: str = "docx"
-
     def export(self) -> None:
-        pass
-
-
-def generate(path: str, msgs: Messages, renderer: Type[IRenderer], config: Optional[ExportConfig] = None) -> IRenderer:
-    if not config:
-        config = ExportConfig()
-    return renderer(msgs, config, path).render()
+        return
