@@ -124,6 +124,9 @@ class IRenderer(abc.ABC):
         config = self.config
         elements = message.elements
 
+        if len(elements) == 0:
+            return None
+
         if config.dice_command_filter and message.role == -1:
             return None
 
