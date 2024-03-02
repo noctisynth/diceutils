@@ -239,12 +239,12 @@ class Cards:
                 self.data = data
                 self.selected_cards = selected_cards
             else:
-                user_data, selected_cards = self.cards_manager.load(target)
+                user_data, selected_card = self.cards_manager.load(target)
                 assert isinstance(user_data, list)
-                assert isinstance(selected_cards, dict)
+                assert isinstance(selected_card, int)
                 if len(user_data) > 0:
                     self.data[target] = user_data
-                    self.selected_cards = selected_cards
+                    self.selected_cards[target] = selected_card
         elif isinstance(target, set):
             for user_id in target:
                 user_data, selected_card = self.cards_manager.load(user_id)
