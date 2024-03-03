@@ -1,11 +1,11 @@
 from diceutils.renderer import Renderer, Messages, Role
+from diceutils.renderer.html import HTMLRenderer
 
 
 def test_render():
     messages = Messages()
     msg_content_1 = [
         {"type": "text", "data": {"text": "“你好”，PC顿了顿道，“非常好”"}},
-        {"type": "image", "data": {"url": "http://a.com/1.png"}},
     ]
     msg_content_2 = [
         {
@@ -16,12 +16,18 @@ def test_render():
         },
         {"type": "image", "data": {"url": "http://a.com/2.png"}},
     ]
+    messages.add_message("230234235", Role.GM, "苏向夜", "date", msg_content_1)
+    messages.add_message("130324324", Role.PL, "少年狐", "date", msg_content_1)
+    messages.add_message("120232412", Role.PL, "Aruvelut", "date", msg_content_2)
     messages.add_message(
-        "1302425", Role.PL, "张三", "datetime.datetime.now()", msg_content_1
-    )
-    messages.add_message(
-        "1302425", Role.PL, "张三", "datetime.datetime.now()", msg_content_2
+        "130232542",
+        Role.OB,
+        "简律纯",
+        "datetime.datetime.now()",
+        [
+            {"type": "text", "data": {"text": "谴责！"}},
+        ],
     )
 
-    # renderer = Renderer.render(messages, DocxRenderer())
-    # renderer.export()
+    renderer = Renderer.render(messages, HTMLRenderer())
+    renderer.export("测试")
