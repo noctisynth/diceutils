@@ -1,7 +1,7 @@
 from diceutils.exceptions import TooManyLoggersError
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Any, Literal, Tuple, Union
+from typing import Dict, List, Any, Literal, Optional, Tuple, Union
 
 import sqlite3
 
@@ -203,6 +203,7 @@ class Logger:
         user_role: Literal["KP", "PL", "OB", "DICER"] = "OB",
         card_name: str = "User",
         data: List[Any] = [],
+        date: Optional[Union[str, datetime]] = None,
         message_sequence: str = "",
     ) -> None:
         id = str(id)
@@ -217,6 +218,10 @@ class Logger:
             raise ValueError(f"Unknown user role '{user_role}'.")
         if not message_sequence or not isinstance(message_sequence, str):
             raise ValueError("Message sequence string is require.")
+        if date is None:
+            date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        elif isinstance(date, datetime):
+            date = date.strftime("%Y-%m-%d %H:%M:%S")
 
         self.log_manager.add(
             session_id,
@@ -224,7 +229,7 @@ class Logger:
             user_id=user_id,
             user_role=user_role,
             card_name=card_name,
-            date=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            date=date,
             data=str(data),
             message_sequence=message_sequence,
         )
