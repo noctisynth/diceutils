@@ -26,6 +26,7 @@ class LogManager:
                 id TEXT,
                 user_id TEXT,
                 user_role TEXT,
+                card_name TEXT,
                 date TEXT,
                 data TEXT,
                 message_sequence TEXT
@@ -36,12 +37,14 @@ class LogManager:
         cursor.close()
 
     def _insert(
-        self, cursor: sqlite3.Cursor, data: Tuple[str, str, str, str, str, str, str]
+        self,
+        cursor: sqlite3.Cursor,
+        data: Tuple[str, str, str, str, str, str, str, str],
     ):
         cursor.execute(
             """
-            INSERT INTO log (session_id, id, user_id, user_role, date, data, message_sequence) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO log (session_id, id, user_id, user_role, card_name, date, data, message_sequence) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
             data,
         )
@@ -52,7 +55,8 @@ class LogManager:
         id: str,
         *,
         user_id: str,
-        user_role: Literal["KP", "PL", "OB"],
+        user_role: Literal["KP", "PL", "OB", "DICER"],
+        card_name: str,
         date: str,
         data: str,
         message_sequence: str,
@@ -67,7 +71,17 @@ class LogManager:
             )
         cursor = self.conn.cursor()
         self._insert(
-            cursor, (session_id, id, user_id, user_role, date, data, message_sequence)
+            cursor,
+            (
+                session_id,
+                id,
+                user_id,
+                user_role,
+                card_name,
+                date,
+                data,
+                message_sequence,
+            ),
         )
         self.conn.commit()
         cursor.close()
@@ -84,10 +98,12 @@ class LogManager:
 
     def loadall(self) -> Dict[str, Dict[str, List[Dict[str, Any]]]]:
         cursor = self.conn.cursor()
-        cursor.execute("SELECT session_id, id, user_id, user_role, date, data FROM log")
+        cursor.execute(
+            "SELECT session_id, id, user_id, user_role, card_name, date, data FROM log"
+        )
         result = cursor.fetchall()
         datas: Dict[str, Dict[str, List[Dict[str, Any]]]] = {}
-        for session_id, id, user_id, user_role, date, data in result:
+        for session_id, id, user_id, user_role, card_name, date, data in result:
             if session_id not in datas:
                 datas[session_id] = {}
             if id not in datas[session_id]:
@@ -97,6 +113,7 @@ class LogManager:
                 {
                     "user_id": user_id,
                     "user_role": user_role,
+                    "card_name": card_name,
                     "date": date,
                     "data": eval(data),
                 }
@@ -108,18 +125,19 @@ class LogManager:
     def load(self, session_id: str, id: str) -> List[Dict[str, Any]]:
         cursor = self.conn.cursor()
         cursor.execute(
-            "SELECT user_id, user_role, date, data FROM log "
+            "SELECT user_id, user_role, card_name, date, data FROM log "
             "WHERE session_id = ? AND id = ?",
             (session_id, id),
         )
 
         result = cursor.fetchall()
         datas: List[Dict[str, Any]] = []
-        for user_id, user_role, date, data in result:
+        for user_id, user_role, card_name, date, data in result:
             datas.append(
                 {
                     "user_id": user_id,
                     "user_role": user_role,
+                    "card_name": card_name,
                     "date": date,
                     "data": eval(data),
                 }
@@ -182,14 +200,20 @@ class Logger:
         id: Union[str, int],
         *,
         user_id: str,
-        user_role: Literal["KP", "PL", "OB"] = "OB",
+        user_role: Literal["KP", "PL", "OB", "DICER"] = "OB",
+        card_name: str = "User",
         data: List[Any] = [],
         message_sequence: str = "",
     ) -> None:
         id = str(id)
         if not data:
             raise ValueError("Could not log an empty data.")
-        if user_role not in ("KP", "PL", "OB"):
+        if not isinstance(user_role, str) or user_role.upper() not in (
+            "KP",
+            "PL",
+            "OB",
+            "DICER",
+        ):
             raise ValueError(f"Unknown user role '{user_role}'.")
         if not message_sequence or not isinstance(message_sequence, str):
             raise ValueError("Message sequence string is require.")
@@ -199,6 +223,7 @@ class Logger:
             id,
             user_id=user_id,
             user_role=user_role,
+            card_name=card_name,
             date=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             data=str(data),
             message_sequence=message_sequence,
