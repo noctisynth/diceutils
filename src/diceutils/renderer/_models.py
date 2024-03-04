@@ -145,7 +145,7 @@ class Renderer(metaclass=abc.ABCMeta):
         if config.external_comment_filter and is_text and is_external_comment:
             return None
         
-        is_command = first_ele.content.startswith((".", "。"))
+        is_command = first_ele.content.startswith((".", "。", "/"))
         
         if config.dice_command_filter and is_text and is_command:
             return None
