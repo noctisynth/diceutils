@@ -112,7 +112,11 @@ h1 {
 }
 
 .text-simsun {
-  font-family: SimSun, Microsoft Yahei, Arial;
+  font-family: Cascadia Mono, SimSun, Microsoft Yahei, Arial;
+}
+
+.text-cascadia {
+  font-family: Cascadia Mono, Arial;
 }
 
 .text-2 {
@@ -161,9 +165,9 @@ class HTMLRenderer(Renderer):
 
     def _render_dicer(self, element: Element) -> str:
         return f"<span>{element.content}</span>"
-    
+
     def _render_command(self, element: Element) -> str:
-        return f"<span>{element.content}</span>"
+        return f'<span class="text-cascadia">{element.content}</span>'
 
     def _render_speak(self, element: Element) -> str:
         content = "“" + element.content.strip('"“”') + "”"
