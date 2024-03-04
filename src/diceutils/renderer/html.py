@@ -161,6 +161,9 @@ class HTMLRenderer(Renderer):
 
     def _render_dicer(self, element: Element) -> str:
         return f"<span>{element.content}</span>"
+    
+    def _render_command(self, element: Element) -> str:
+        return f"<span>{element.content}</span>"
 
     def _render_speak(self, element: Element) -> str:
         content = "“" + element.content.strip('"“”') + "”"
@@ -193,6 +196,8 @@ class HTMLRenderer(Renderer):
                     text += self._render_outside(element)
                 elif element.tag == "speak":
                     text += self._render_speak(element)
+                elif element.tag == "command":
+                    text += self._render_command(element)
         text += f'<span class="tooltiptext">{message.date}</span></p></div>'
         text += "\n</div>"
         self.plain_text += text

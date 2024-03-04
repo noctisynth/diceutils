@@ -16,9 +16,27 @@ def test_render():
         },
         {"type": "image", "data": {"url": "http://a.com/2.png"}},
     ]
+    msg_content_3 = [
+        {
+            "type": "text",
+            "data": {
+                "text": ".rd10*5"
+            }
+        }
+    ]
+    msg_content_4 = [
+         {
+            "type": "text",
+            "data": {
+                "text": "[苏向夜]掷骰: 1D10*5={10}*5=50"
+            }
+        }
+    ]
     messages.add_message("230234235", Role.GM, "苏向夜", "date", msg_content_1)
     messages.add_message("130324324", Role.PL, "少年狐", "date", msg_content_1)
     messages.add_message("120232412", Role.PL, "Aruvelut", "date", msg_content_2)
+    messages.add_message("230234235", Role.GM, "苏向夜", "date", msg_content_3)
+    messages.add_message("3371047314", Role.DICER, "骰娘", "date", msg_content_4)
     messages.add_message(
         "130232542",
         Role.OB,
