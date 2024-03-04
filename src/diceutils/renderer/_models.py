@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Dict, List, Any, Optional
 from enum import Enum
 
@@ -180,5 +181,5 @@ class Renderer(metaclass=abc.ABCMeta):
         return renderer
 
     @abc.abstractmethod
-    def export(self, filename: str) -> None:
+    def export(self, filename: str) -> Path:
         raise NotImplementedError

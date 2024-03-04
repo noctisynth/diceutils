@@ -197,7 +197,7 @@ class HTMLRenderer(Renderer):
         text += "\n</div>"
         self.plain_text += text
 
-    def export(self, filename: str) -> None:
+    def export(self, filename: str) -> Path:
         text = "<!DOCTYPE html>\n"
         text += '<html lang="zh-CN">\n'
         text += "  <head>\n"
@@ -219,3 +219,4 @@ class HTMLRenderer(Renderer):
         filepath = Path("./exports/" + filename + ".html").resolve()
         filepath.parent.mkdir(parents=True, exist_ok=True)
         filepath.write_text(text, encoding="utf-8")
+        return filepath
