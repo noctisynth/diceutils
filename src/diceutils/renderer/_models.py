@@ -112,17 +112,34 @@ class ExportConfig:
 class Renderer(metaclass=abc.ABCMeta):
     @staticmethod
     def split_and_label(text: str) -> Dict[str, str]:
-        pattern = r"“[^”]*”|[^“”]+"
-        parts: List[str] = re.findall(pattern, text)
-
         result_dict = {}
+        inside_quote = False
+        current_text = ""
+        current_label = "act"
 
-        for part in parts:
-            if part.startswith("“") and part.endswith("”"):
-                result_dict[part] = "speak"
+        for c in text:
+            if c in "“”\"":
+                if inside_quote: 
+                    current_text = f"“{current_text}”"
+                    result_dict[current_text] = current_label
+                    current_text = ""
+                    current_label = "act"
+                    inside_quote = False
+                else:   
+                    if current_text:
+                        result_dict[current_text] = current_label
+                        current_text = ""
+                    current_label = "speak"
+                    inside_quote = True 
             else:
-                result_dict[part] = "act"
-
+                current_text += c
+        
+        if current_text:
+            final_label = "speak" if inside_quote else "act"
+            if final_label == "speak":
+                current_text = f"{current_text}"
+            result_dict[current_text] = final_label
+            
         return result_dict
 
     @staticmethod

@@ -32,11 +32,21 @@ def test_render():
             }
         }
     ]
+
+    msg_content_5 = [
+         {
+            "type": "text",
+            "data": {
+                "text": "苏说道:”我们去毁灭人类吧。“Test，“hi"
+            }
+        }
+    ]
     messages.add_message("230234235", Role.GM, "苏向夜", "date", msg_content_1)
     messages.add_message("130324324", Role.PL, "少年狐", "date", msg_content_1)
     messages.add_message("120232412", Role.PL, "Aruvelut", "date", msg_content_2)
     messages.add_message("230234235", Role.GM, "苏向夜", "date", msg_content_3)
     messages.add_message("3371047314", Role.DICER, "骰娘", "date", msg_content_4)
+    messages.add_message("230234235", Role.GM, "苏向夜", "date", msg_content_5)
     messages.add_message(
         "130232542",
         Role.OB,
