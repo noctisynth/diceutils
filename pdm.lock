@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["cross_platform"]
 lock_version = "4.4.1"
-content_hash = "sha256:94d9609f7f7cd4fd8624d9e9a491444bd19fa4eb44b286cff59fa7e4ffdab5ed"
+content_hash = "sha256:962963c0e18f89763b0780e099a69b00bb0bb3edcca7c0a496e60095025b4391"
 
 [[package]]
 name = "chardet"
@@ -39,16 +39,15 @@ files = [
 
 [[package]]
 name = "infini"
-version = "2.0.6"
+version = "2.1.1"
 requires_python = ">=3.8"
-summary = "Infini 轻量输入输出流框架"
+summary = "Infini 内容输入输出流框架"
 dependencies = [
     "jinja2>=3.1.3",
     "rich>=13.7.0",
 ]
 files = [
-    {file = "infini-2.0.6-py3-none-any.whl", hash = "sha256:cf4bae695c53f4965e9e9fba9d5b1c2586e5082adfe0076f8595295affdb1dc5"},
-    {file = "infini-2.0.6.tar.gz", hash = "sha256:b255a445d09a7e4a67a40e07c8343693dbeffdfaeae5288c9857782756d21c93"},
+    {file = "infini-2.1.1-py3-none-any.whl", hash = "sha256:64c1be7bf3b5d3b9975088087b3737df623ca81de689bcfc370ca708bf48c1f4"},
 ]
 
 [[package]]
@@ -314,7 +313,7 @@ files = [
 
 [[package]]
 name = "pytest"
-version = "8.0.1"
+version = "8.0.2"
 requires_python = ">=3.8"
 summary = "pytest: simple powerful testing with Python"
 dependencies = [
@@ -326,8 +325,8 @@ dependencies = [
     "tomli>=1.0.0; python_version < \"3.11\"",
 ]
 files = [
-    {file = "pytest-8.0.1-py3-none-any.whl", hash = "sha256:3e4f16fe1c0a9dc9d9389161c127c3edc5d810c38d6793042fb81d9f48a59fca"},
-    {file = "pytest-8.0.1.tar.gz", hash = "sha256:267f6563751877d772019b13aacbe4e860d73fe8f651f28112e9ac37de7513ae"},
+    {file = "pytest-8.0.2-py3-none-any.whl", hash = "sha256:edfaaef32ce5172d5466b5127b42e0d6d35ebbe4453f0e3505d96afd93f6b096"},
+    {file = "pytest-8.0.2.tar.gz", hash = "sha256:d4051d623a2e0b7e51960ba963193b09ce6daeb9759a451844a21e4ddedfc1bd"},
 ]
 
 [[package]]
