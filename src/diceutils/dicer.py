@@ -259,13 +259,16 @@ class Dicer:
         matches: List[str] = re.findall(r"\d*[a-zA-Z]\w*|\d+|[-+*/()]", roll_string)
         patterns = [r"\d*[dD]\d*", r"\d*[bB]\d+", r"\d*[pP]\d+", r"\d+"]
 
+        if not matches:
+            return False
+
         for match in matches:
             if match not in "-+*/()" and not any(
                 [re.match(pattern, match) for pattern in patterns]
             ):
                 return False
-
-        return True
+        else:
+            return True
 
     def roll(self):
         self.parse(roll_string=self.roll_string, explode=self.explode)
