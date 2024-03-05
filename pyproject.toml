@@ -1,12 +1,12 @@
 [project]
 name = "diceutils"
-version = "0.3.3"
+version = "0.3.4"
 description = "基于 Infini 标准的骰娘相关组件和工具类"
 authors = [
     {name = "苏向夜", email = "fu050409@163.com"},
 ]
 dependencies = [
-    "infini>=2.0.1",
+    "infini>=2.1.1",
     "python-docx>=1.1.0",
     "reportlab>=4.1.0",
 ]
