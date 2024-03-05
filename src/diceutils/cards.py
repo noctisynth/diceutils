@@ -304,10 +304,12 @@ class Cards:
         Returns:
             Optional[Dict[str, Any]]: card data.
         """
-        index = index or self._get_selected_id(user_id)
+        if index is None:
+            index = self._get_selected_id(user_id)
+
         return (
             self.data.get(user_id, [])[index]
-            if index is not None and 0 <= index < len(self.data.get(user_id, []))
+            if 0 <= index < len(self.data.get(user_id, []))
             else None
         )
 
