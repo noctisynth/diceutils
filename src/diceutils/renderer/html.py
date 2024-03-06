@@ -1,6 +1,8 @@
 from diceutils.renderer._models import Renderer, Message, Role, Element
 from pathlib import Path
 
+import html
+
 _style_sheet = """
 <style>
 *, :before, :after {
@@ -31,6 +33,10 @@ hr {
 
 h1 {
     margin-bottom: 2px;
+}
+
+p {
+    white-space: pre-wrap;
 }
 
 .tooltip {
@@ -166,25 +172,25 @@ class HTMLRenderer(Renderer):
         )
 
     def _render_keeper(self, element: Element):
-        return f'<span class="text-kai">{element.content}</span>'
+        return f'<span class="text-kai">{html.escape(element.content)}</span>'
 
     def _render_act(self, element: Element, is_first: bool = False):
         content = "#" + element.content.strip("#＃") if is_first else element.content
-        return f'<span class="text-simsun text-italic">{content}</span>'
+        return f'<span class="text-simsun text-italic">{html.escape(content)}</span>'
 
     def _render_dicer(self, element: Element) -> str:
-        return f"<span>{element.content}</span>"
+        return f"<span>{html.escape(element.content)}</span>"
 
     def _render_command(self, element: Element) -> str:
-        return f'<span class="text-cascadia">{element.content}</span>'
+        return f'<span class="text-cascadia">{html.escape(element.content)}</span>'
 
     def _render_speak(self, element: Element) -> str:
         content = "“" + element.content.strip('"“”') + "”"
-        return f'<span class="text-simsun">{content}</span>'
+        return f'<span class="text-simsun">{html.escape(content)}</span>'
 
     def _render_outside(self, element: Element) -> str:
         content = "（" + element.content.strip("()（）") + "）"
-        return f'<span class="flex items-center justify-center text-coolGray">{content}</span>'
+        return f'<span class="flex items-center justify-center text-coolGray">{html.escape(content)}</span>'
 
     def _render_image(self, image: Element) -> str:
         return f'<span><img src="{image.content}"></img></span>'
