@@ -177,8 +177,12 @@ class HTMLRenderer(Renderer):
         content = "（" + element.content.strip("()（）") + "）"
         return f'<span class="flex items-center justify-center text-coolGray">{content}</span>'
 
+    def _render_image(self, image: Element) -> str:
+        return f'<span><img src="{image.content}"></img></span>'
+
     def render_message(self, message: Message) -> None:
-        text = '<div class="flex items-center justify-start flex-row w-full">\n'
+        text = " " * 6
+        text += '<div class="flex items-center justify-start flex-row w-full">'
         text += self._render_user(message)
         text += '<div><p class="tooltip">'
         for index, element in enumerate(message.elements):
@@ -202,8 +206,10 @@ class HTMLRenderer(Renderer):
                     text += self._render_speak(element)
                 elif element.tag == "command":
                     text += self._render_command(element)
+            elif element.type == "image":
+                text += self._render_image(element)
         text += f'<span class="tooltiptext">{message.date}</span></p></div>'
-        text += "\n</div>"
+        text += "</div>\n"
         self.plain_text += text
 
     def export(self, filename: str) -> Path:
@@ -219,9 +225,9 @@ class HTMLRenderer(Renderer):
         text += "  </head>\n\n"
         text += "  <body>\n"
         text += '    <div class="m-2 flex items-start justify-center flex-col">\n'
-        text += f"      <h1>{filename}</h1><hr />"
+        text += f"      <h1>{filename}</h1><hr />\n"
         text += self.plain_text
-        text += "\n    </div>\n"
+        text += "    </div>\n"
         text += "  </body>\n"
         text += _style_sheet
         text += "</html>"
