@@ -37,7 +37,7 @@ def test_render():
         "简律纯",
         str(datetime.datetime.now()),
         [
-            {"type": "text", "data": {"text": "谴责！"}},
+            {"type": "text", "data": {"text": "谴责！\n狠狠谴责！"}},
             {
                 "type": "image",
                 "data": {
