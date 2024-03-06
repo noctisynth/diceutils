@@ -45,8 +45,8 @@ h1 {
     /* Position the tooltip text */
     position: absolute;
     z-index: 1;
-    bottom: 125%;
-    left: 50%;
+    bottom: calc(100% + 5px);
+    left: calc(50% + 50px);
     margin-left: -60px;
 
     /* Fade in tooltip */
