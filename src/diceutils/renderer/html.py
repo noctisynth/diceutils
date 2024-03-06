@@ -20,6 +20,11 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
+img {
+    max-width: 100%;
+    height: auto;
+}
+
 hr {
     width: 100%;
 }
@@ -138,6 +143,10 @@ h1 {
 .m-2 {
     margin: 2rem;
 }
+
+.flex-wrap {
+    flex-wrap: wrap;
+}
 </style>
 """
 
@@ -160,7 +169,7 @@ class HTMLRenderer(Renderer):
         return f'<span class="text-kai">{element.content}</span>'
 
     def _render_act(self, element: Element, is_first: bool = False):
-        content = "#" + element.content if is_first else element.content
+        content = "#" + element.content.strip("#＃") if is_first else element.content
         return f'<span class="text-simsun text-italic">{content}</span>'
 
     def _render_dicer(self, element: Element) -> str:
@@ -182,7 +191,9 @@ class HTMLRenderer(Renderer):
 
     def render_message(self, message: Message) -> None:
         text = " " * 6
-        text += '<div class="flex items-center justify-start flex-row w-full">'
+        text += (
+            '<div class="flex items-center justify-start flex-row w-full flex-wrap">'
+        )
         text += self._render_user(message)
         text += '<div><p class="tooltip">'
         for index, element in enumerate(message.elements):
