@@ -4,7 +4,7 @@ from pathlib import Path
 _style_sheet = """
 <style>
 *, :before, :after {
-  box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 body {
@@ -21,122 +21,122 @@ body {
 }
 
 hr {
-  width: 100%;
+    width: 100%;
 }
 
 h1 {
-  margin-bottom: 2px;
+    margin-bottom: 2px;
 }
 
 .tooltip {
-  position: relative;
-  display: inline-block;
+    position: relative;
+    display: inline-block;
 }
 
 .tooltip .tooltiptext {
-  visibility: hidden;
-  width: auto;
-  background-color: #555;
-  color: #fff;
-  text-align: center;
-  padding: 5px;
-  border-radius: 6px;
+    visibility: hidden;
+    width: auto;
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+    padding: 5px;
+    border-radius: 6px;
 
-  /* Position the tooltip text */
-  position: absolute;
-  z-index: 1;
-  bottom: 125%;
-  left: 50%;
-  margin-left: -60px;
+    /* Position the tooltip text */
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -60px;
 
-  /* Fade in tooltip */
-  opacity: 0;
-  transition: opacity 0.3s;
+    /* Fade in tooltip */
+    opacity: 0;
+    transition: opacity 0.3s;
 }
 
 .tooltip .tooltiptext::after {
-  content: "";
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  margin-left: -5px;
-  border-width: 5px;
-  border-style: solid;
-  border-color: #555 transparent transparent transparent;
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #555 transparent transparent transparent;
 }
 
 .tooltip:hover .tooltiptext {
-  visibility: visible;
-  opacity: 1;
+    visibility: visible;
+    opacity: 1;
 }
 
 .flex {
-  display: flex;
+    display: flex;
 }
 
 .flex-col {
-  flex-direction: column;
+    flex-direction: column;
 }
 
 .flex-row {
-  flex-direction: row;
+    flex-direction: row;
 }
 
 .items-center {
-  align-items: center;
+    align-items: center;
 }
 
 .items-start {
-  align-items: start;
+    align-items: start;
 }
 
 .justify-center {
-  justify-content: center;
+    justify-content: center;
 }
 
 .justify-start {
-  justify-content: start;
+    justify-content: start;
 }
 
 .text-coolGray {
-  color: rgb(207, 210, 210);
+    color: rgb(207, 210, 210);
 }
 
 .text-kai {
-  font-family: 楷体, Microsoft Yahei, Arial;
-  font-size: 1.1rem;
+    font-family: 楷体, Microsoft Yahei, Arial;
+    font-size: 1.1rem;
 }
 
 .text-italic {
-  font-style: italic;
+    font-style: italic;
 }
 
 .text-simsun {
-  font-family: Cascadia Mono, SimSun, Microsoft Yahei, Arial;
+    font-family: Cascadia Mono, SimSun, Microsoft Yahei, Arial;
 }
 
 .text-cascadia {
-  font-family: Cascadia Mono, Arial;
+    font-family: Cascadia Mono, Arial;
 }
 
 .text-2 {
-  font-size: 0.6rem;
+    font-size: 0.6rem;
 }
 
 .w-full {
-  width: 100%;
+    width: 100%;
 }
 
 .pr-1 {
-  padding-right: 0.6rem;
+    padding-right: 0.6rem;
 }
 
 .w-4 {
-   width: 5rem;
+    width: 5rem;
 }
 
 .m-2 {
-  margin: 2rem;
+    margin: 2rem;
 }
 </style>
 """
