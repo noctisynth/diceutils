@@ -3,7 +3,6 @@ from typing import Dict, List, Any, Optional
 from enum import Enum
 
 import abc
-import re
 
 
 class Element(metaclass=abc.ABCMeta):
@@ -187,16 +186,19 @@ class Renderer(metaclass=abc.ABCMeta):
             else: 
                 for text, tag in Renderer.split_and_label(first_ele.content).items():
                     new_elements.append(Text(text, tag))
+        elif is_image:
+            new_elements.append(first_ele)
         else:
-            if is_image:
-                new_elements.append(first_ele)
-            else:
-                assert False, "Encountered an unsupported element type."
+            assert False, "Encountered an unsupported element type."
 
         for ele in ele_iter:
             if isinstance(ele, Text):
                 for text, tag in Renderer.split_and_label(ele.content).items():
                     new_elements.append(Text(text, tag))
+            elif isinstance(ele, Image):
+                new_elements.append(Image(ele.content))
+            else:
+                 assert False, "Encountered an unsupported element type."
 
         message.elements = new_elements
         return message
