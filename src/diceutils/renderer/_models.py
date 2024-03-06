@@ -146,17 +146,19 @@ class Renderer(metaclass=abc.ABCMeta):
     def parse_message(message: Message, config: ExportConfig) -> Optional[Message]:
         elements = message.elements
 
-        if ele_len := len(elements) == 0:
+        if (ele_len := len(elements)) == 0:
             return None
 
         if config.dice_command_filter and message.role == -1:
             return None
 
-        if ele_len == 1 and isinstance(elements[0], Image):
-            return message if config.display_image else None
-
         ele_iter = iter(elements)
         first_ele = next(ele_iter)
+        is_image = isinstance(first_ele, Image)
+
+        if ele_len == 1 and is_image:
+                return message if config.display_image else None
+        
         is_text = isinstance(first_ele, Text)
         is_external_comment = first_ele.content.startswith(("(", "（"))
         
@@ -168,6 +170,7 @@ class Renderer(metaclass=abc.ABCMeta):
         if config.dice_command_filter and is_text and is_command:
             return None
 
+        new_elements = []
         if is_text:
             if is_external_comment:
                 first_ele.set_tag("outside")
@@ -182,9 +185,14 @@ class Renderer(metaclass=abc.ABCMeta):
                         ele.set_tag("command")
                 return message
             else: 
-                new_elements = []
                 for text, tag in Renderer.split_and_label(first_ele.content).items():
                     new_elements.append(Text(text, tag))
+        else:
+            if is_image:
+                print(f"{message.elements}")
+                new_elements.append(first_ele)
+            else:
+                assert False, "Encountered an unsupported element type."
 
         for ele in ele_iter:
             if isinstance(ele, Text):
