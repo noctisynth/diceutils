@@ -126,7 +126,7 @@ class Renderer(metaclass=abc.ABCMeta):
     @staticmethod
     def split_and_label(text: str) -> Dict[str, str]:
         ACTION_LABEL = Renderer._PLAYER_ACTION_LABEL
-        SPEECH_LABEL = Renderer._PLAYER_ACTION_LABEL
+        SPEECH_LABEL = Renderer._PLAYER_SPEECH_LABEL
 
         result_dict = {}
         inside_quote = False
