@@ -189,7 +189,6 @@ class Renderer(metaclass=abc.ABCMeta):
                     new_elements.append(Text(text, tag))
         else:
             if is_image:
-                print(f"{message.elements}")
                 new_elements.append(first_ele)
             else:
                 assert False, "Encountered an unsupported element type."
