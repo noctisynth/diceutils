@@ -1,3 +1,4 @@
+from cProfile import label
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 from enum import Enum
@@ -9,26 +10,33 @@ class Element(metaclass=abc.ABCMeta):
     def __init__(self, _type: str, content: str) -> None:
         self.type: str = _type
         self.content: str = content
-        self._tag: str = "act"
+        self._label: str = "act"
 
     def __repr__(self) -> str:
-        return f"Element(type={self.type}, content={self.content})"
+        return f"Element(type={self.type!r}, content={self.content!r}, label={self._label!r})"
 
     @property
     def tag(self) -> str:
-        return self._tag
+        return self._label
+
+    def set_tag(self, tag: str):
+        self.set_label(tag)
+
+    @property
+    def label(self) -> str:
+        return self._label
+
+    def set_label(self, label: str):
+        self._label = label
 
 
 class Text(Element):
-    def __init__(self, text, tag: Optional[str] = None):
+    def __init__(self, text, label: Optional[str] = None):
         super().__init__("text", text)
-        self._tag = tag or self._tag
+        self._label = label or self._label
 
     def __repr__(self) -> str:
-        return f"Text(type={self.type!r}, content={self.content!r}, tag={self._tag!r})"
-
-    def set_tag(self, tag: str):
-        self._tag = tag
+        return f"Text(type={self.type!r}, content={self.content!r}, label={self._label!r})"
 
 
 class Image(Element):
@@ -36,7 +44,7 @@ class Image(Element):
         super().__init__("image", url)
 
     def __repr__(self) -> str:
-        return f"Image(type={self.type!r}, url={self.content!r})"
+        return f"Image(type={self.type!r}, url={self.content!r}, label={self._label!r})"
 
 
 class Role(Enum):
@@ -48,12 +56,12 @@ class Role(Enum):
 
 class Message:
     def __init__(
-        self,
-        user_code: str,
-        role: Role,
-        nickname: str,
-        date: str,
-        elements: List[Element] = [],
+            self,
+            user_code: str,
+            role: Role,
+            nickname: str,
+            date: str,
+            elements: List[Element] = [],
     ):
         self.user_code = user_code
         self.nickname = nickname
@@ -73,12 +81,12 @@ class Messages(List[Message]):
         return super().append(message)
 
     def add_message(
-        self,
-        user_code: str,
-        role: Role,
-        nickname: str,
-        date: str,
-        content: List[Dict[str, Any]],
+            self,
+            user_code: str,
+            role: Role,
+            nickname: str,
+            date: str,
+            content: List[Dict[str, Any]],
     ):
         elements = []
         try:
@@ -100,8 +108,8 @@ class Messages(List[Message]):
 class ExportConfig:
     def __init__(self):
         self.first_line_indent = True  # 首行缩进
-        self.dice_command_filter = False  # 骰子指令过滤
-        self.external_comment_filter = False  # 场外发言过滤
+        self.display_dice_command = True  # 指令显示
+        self.display_external_comment = True  # 场外发言显示
         self.display_image = True  # 图片显示
         self.display_datetime = True  # 时间显示
         self.display_account = True  # 帐号显示
@@ -109,96 +117,125 @@ class ExportConfig:
 
 
 class Renderer(metaclass=abc.ABCMeta):
+    _PLAYER_ACTION_LABEL = "act"  # 玩家行动
+    _PLAYER_SPEECH_LABEL = "speak"  # 玩家发言
+    _DICE_COMMAND_LABEL = "command"  # 骰娘指令
+    _EXTERNAL_COMMENT_LABEL = "outside"  # 场外发言
+    _INVALID_OPERATION_LABEL = "invalid"  # 非法操作或无效操作产生的数据
+
     @staticmethod
     def split_and_label(text: str) -> Dict[str, str]:
+        ACTION_LABEL = Renderer._PLAYER_ACTION_LABEL
+        SPEECH_LABEL = Renderer._PLAYER_SPEECH_LABEL
+
         result_dict = {}
         inside_quote = False
         current_text = ""
-        current_label = "act"
+        current_label = ACTION_LABEL
 
         for c in text:
             if c in "“”\"":
-                if inside_quote: 
-                    current_text = f"“{current_text}”"
+                if inside_quote:
                     result_dict[current_text] = current_label
                     current_text = ""
-                    current_label = "act"
+                    current_label = ACTION_LABEL
                     inside_quote = False
-                else:   
+                else:
                     if current_text:
                         result_dict[current_text] = current_label
                         current_text = ""
-                    current_label = "speak"
-                    inside_quote = True 
+                    current_label = SPEECH_LABEL
+                    inside_quote = True
             else:
                 current_text += c
-        
+
         if current_text:
-            final_label = "speak" if inside_quote else "act"
-            if final_label == "speak":
-                current_text = f"{current_text}"
+            final_label = SPEECH_LABEL if inside_quote else ACTION_LABEL
             result_dict[current_text] = final_label
-            
+
         return result_dict
 
     @staticmethod
     def parse_message(message: Message, config: ExportConfig) -> Optional[Message]:
+
+        def set_labels(elements: List[Element], new_elements: List[Element], first_label: str, other_label: str):
+            if (elements_len := len(elements)) == 0:
+                assert False, "Empty element list"
+
+            first_elements = elements[0]
+
+            first_elements.set_label(first_label)
+            new_elements.append(first_elements)
+
+            if elements_len != 1:
+                for element in elements[1:]:
+                    element.set_label(other_label)
+                    new_elements.append(element)
+
         elements = message.elements
 
-        if (ele_len := len(elements)) == 0:
+        element_len = len(elements)
+
+        if element_len == 0:
             return None
 
-        if config.dice_command_filter and message.role == -1:
+        sender_role = message.role
+
+        first_ele = elements[0]
+        first_ele_content = first_ele.content.strip()
+
+        is_command = first_ele_content.startswith(('.', '。', '/'))
+
+        is_first_ele_img = isinstance(first_ele, Image)
+        is_first_ele_text = isinstance(first_ele, Text)
+
+        is_external_comment = is_first_ele_text and first_ele_content.startswith(('(', '（'))
+
+        if sender_role == Role.DICER and not config.display_dice_command:
             return None
 
-        ele_iter = iter(elements)
-        first_ele = next(ele_iter)
-        is_image = isinstance(first_ele, Image)
+        if is_external_comment and not config.display_external_comment:
+            return None
 
-        if ele_len == 1 and is_image:
-                return message if config.display_image else None
-        
-        is_text = isinstance(first_ele, Text)
-        is_external_comment = first_ele.content.startswith(("(", "（"))
-        
-        if config.external_comment_filter and is_text and is_external_comment:
+        if is_command and not config.display_dice_command:
             return None
-        
-        is_command = first_ele.content.startswith((".", "。", "/"))
-        
-        if config.dice_command_filter and is_text and is_command:
-            return None
+
+        if element_len == 1 and is_first_ele_img:
+            return message if config.display_image else None
 
         new_elements = []
-        if is_text:
-            if is_external_comment:
-                first_ele.set_tag("outside")
-                for ele in ele_iter:
-                    if isinstance(ele, Text):
-                        ele.set_tag("outside")
-                return message
-            elif is_command:
-                first_ele.set_tag("command")
-                for ele in ele_iter:
-                    if isinstance(ele, Text):
-                        ele.set_tag("command")
-                return message
-            else: 
-                for text, tag in Renderer.split_and_label(first_ele.content).items():
-                    new_elements.append(Text(text, tag))
-        elif is_image:
-            new_elements.append(first_ele)
+        if is_first_ele_text:
+            if is_command:
+                set_labels(
+                    elements=elements,
+                    new_elements=new_elements,
+                    first_label=Renderer._DICE_COMMAND_LABEL,
+                    other_label=Renderer._INVALID_OPERATION_LABEL
+                )
+            elif is_external_comment:
+                set_labels(
+                    elements=elements,
+                    new_elements=new_elements,
+                    first_label=Renderer._EXTERNAL_COMMENT_LABEL,
+                    other_label=Renderer._EXTERNAL_COMMENT_LABEL
+                )
+        elif is_first_ele_img:
+            if config.display_image:
+                new_elements.append(first_ele)
         else:
-            assert False, "Encountered an unsupported element type."
+            assert False, "Encountered an unsupported element type"
 
-        for ele in ele_iter:
-            if isinstance(ele, Text):
-                for text, tag in Renderer.split_and_label(ele.content).items():
-                    new_elements.append(Text(text, tag))
-            elif isinstance(ele, Image):
-                new_elements.append(Image(ele.content))
-            else:
-                 assert False, "Encountered an unsupported element type."
+        if not (is_external_comment or is_command):
+            for element in elements:
+                if isinstance(element, Text):
+                    labeled_text = Renderer.split_and_label(element.content)
+                    for text, label in labeled_text.items():
+                        element_obj = Text(text, label)
+                        new_elements.append(element_obj)
+                elif isinstance(element, Image):
+                    new_elements.append(element)
+                else:
+                    assert False, "Encountered an unsupported element type."
 
         message.elements = new_elements
         return message
@@ -209,9 +246,9 @@ class Renderer(metaclass=abc.ABCMeta):
 
     @staticmethod
     def render(
-        messages: Messages,
-        renderer: "Renderer",
-        config: Optional[ExportConfig] = None,
+            messages: Messages,
+            renderer: "Renderer",
+            config: Optional[ExportConfig] = None,
     ) -> "Renderer":
         for message in messages:
             if message := renderer.parse_message(message, config or ExportConfig()):
