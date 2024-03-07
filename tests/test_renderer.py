@@ -1,4 +1,5 @@
 from diceutils.renderer import Renderer, Messages, Role
+from diceutils.renderer.docx import DocxRenderer
 from diceutils.renderer.html import HTMLRenderer
 
 import datetime
@@ -61,5 +62,6 @@ def test_render():
         ],
     )
 
-    renderer = Renderer.render(messages, HTMLRenderer())
-    renderer.export("测试")
+    # Renderer.render(messages, HTMLRenderer()).export("测试") # type: ignore
+    Renderer.render(messages, DocxRenderer()).export("测试")
+    raise
