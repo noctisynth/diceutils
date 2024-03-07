@@ -30,7 +30,7 @@ def test_render():
     messages.add_message("130324324", Role.PL, "少年狐", "date", msg_content_1)
     messages.add_message("120232412", Role.PL, "Aruvelut", "date", msg_content_2)
     messages.add_message("230234235", Role.GM, "苏向夜", "date", msg_content_3)
-    messages.add_message("3371047314", Role.DICER, "骰娘", "date", msg_content_4)
+    messages.add_message("337104731", Role.DICER, "骰娘", "date", msg_content_4)
     messages.add_message("230234235", Role.GM, "苏向夜", "date", msg_content_5)
     messages.add_message(
         "130232542",
@@ -62,6 +62,5 @@ def test_render():
         ],
     )
 
-    # Renderer.render(messages, HTMLRenderer()).export("测试") # type: ignore
-    Renderer.render(messages, DocxRenderer()).export("测试")
-    raise
+    Renderer.render(messages, HTMLRenderer())
+    Renderer.render(messages, DocxRenderer())
